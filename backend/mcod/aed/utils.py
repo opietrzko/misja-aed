@@ -379,6 +379,17 @@ def create_main_aed_file(directory: Optional[Path] = None) -> Path:
     return path
 
 
+def ensure_main_dataset_license(dataset):
+    """Zbiór zbiorczy jest na licencji CC BY 4.0 (uznanie autorstwa), niezależnie od tego, kiedy powstał."""
+    from mcod.datasets.models import Dataset
+
+    if dataset.license_chosen != Dataset.LICENSE_CC_BY or not dataset.license_condition_default_cc40:
+        dataset.license_chosen = Dataset.LICENSE_CC_BY
+        dataset.license_condition_default_cc40 = True
+        dataset.save()
+    return dataset
+
+
 def _get_or_create_main_dataset():
     from django.apps import apps
     from django.conf import settings
@@ -388,7 +399,7 @@ def _get_or_create_main_dataset():
 
     info = AggregatedAEDInfo.objects.last()
     if info and info.main_aed_dataset:
-        return info.main_aed_dataset
+        return ensure_main_dataset_license(info.main_aed_dataset)
 
     Organization = apps.get_model("organizations", "Organization")
     Dataset = apps.get_model("datasets", "Dataset")
@@ -410,6 +421,8 @@ def _get_or_create_main_dataset():
             has_research_data=False,
             update_frequency="daily",
             status="published",
+            license_chosen=Dataset.LICENSE_CC_BY,
+            license_condition_default_cc40=True,
         )
         dataset.categories.set(Category.objects.filter(title__in=settings.MAIN_AED_DATASET_CATEGORIES_TITLES))
         tags = [Tag.objects.get_or_create(name=n, language="pl")[0] for n in settings.MAIN_AED_DATASET_TAGS_NAMES]

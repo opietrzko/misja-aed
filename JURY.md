@@ -25,6 +25,17 @@ Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dy
 4. Po zapisie wykaz trafia do wykazu zbiorczego przy najbliższym przebiegu zadania (codziennie) albo od razu po
    uruchomieniu komendy `python manage.py aed_build_main`.
 
+## Licencja
+Zbiór zbiorczy jest udostępniany na **CC BY 4.0** (uznanie autorstwa): wolna i otwarta, pozwala na użycie komercyjne i przetwarzanie, a nazwa dysponenta
+zostaje przy danych w kolumnach „Nazwa dysponenta zasobu" i „Zakres referencyjny źródła". Licencję ustawia kod przy każdym scaleniu (`ensure_main_dataset_license`).
+
+Zasady wobec źródeł o innych warunkach (rekomendacja, nie opinia prawna):
+- do zbioru zbiorczego trafiają wykazy na licencji nie ostrzejszej niż CC BY (CC0, CC BY, dane publiczne),
+- licencje NC (zakaz użycia komercyjnego) i ND (zakaz przetwarzania) wykluczamy: nie są wolne i uniemożliwiają łączenie danych,
+- licencji SA nie stosujemy w zbiorze zbiorczym, bo wymusza tę samą licencję na wynikach,
+- **OpenStreetMap (ODbL, share-alike)** nie może wejść do zbioru na CC BY: publikujemy go jako osobny wykaz na licencji zgodnej z ODbL
+  (do uzgodnienia z organizatorem).
+
 ## Konwerter: z dowolnego pliku do wzorca
 Dysponenci mają dane w różnych układach, więc portal ma konwerter (panel administracyjny, adres `/aed/konwerter/`, albo komenda `manage.py aed_convert`).
 1. Wgraj plik (csv, xlsx, xls, json/GeoJSON, także wynik zapytania Overpass z OpenStreetMap) i opcjonalnie wybierz profil źródła (`osm`).
