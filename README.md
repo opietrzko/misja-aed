@@ -18,7 +18,9 @@ dowolny plik dysponenta (inne nazwy kolumn, współrzędne w PL-1992, OpenStreet
 | [`JURY.md`](JURY.md) | instrukcja dla jury, algorytmy, ograniczenia |
 | `backend/` | kod portalu dane.gov.pl (Django) **wraz z naszym rozszerzeniem w `backend/mcod/aed/`** |
 | `frontend/` | front portalu (Angular) |
-| `aed-demo/` | wzorcowy plik xlsx (wymagany w zadaniu) i generator danych demo |
+| `przykladowe-dane/` | **przykładowe dane do importu i testów** z oczekiwanymi wynikami (wykazy dostawców, pliki dla konwertera, pliki odrzucane, import XML) |
+| `aed-demo/` | wzorcowy plik xlsx (wymagany w zadaniu) i generator przykładowych danych |
+| [`TESTOWANIE.md`](TESTOWANIE.md) | jak testować wszystko: testy automatyczne i ręczne scenariusze |
 | `identyfikacja-wizualna/` | logo, ikony, materiały i księga znaku |
 | `wymagania-konkursowe/` | treść i regulamin zadania |
 
@@ -36,7 +38,7 @@ Pełna instrukcja: [`backend/README.md`](backend/README.md) i [`frontend/README.
 - dane demo i scalenie uruchamiaj przez `docker exec mcod-admin python manage.py aed_seed_demo` i `aed_build_main` (nie przez `run`, bo pliki muszą trafić do wspólnego katalogu `media` z Celery);
 - obrazy są amd64, więc na Macu z procesorem ARM działają w emulacji i potrzebują sporo pamięci (kilka GB dla Dockera).
 
-Testy logiki AED (bez Dockera), z katalogu `backend/`:
+Pełna instrukcja testowania: [`TESTOWANIE.md`](TESTOWANIE.md). Testy logiki AED (bez Dockera), z katalogu `backend/`:
 `python3 -m venv .venv && .venv/bin/pip install pandas pytest openpyxl pyproj`
 `PYTHONPATH=. .venv/bin/python -m pytest mcod/aed/tests -c /dev/null --confcutdir=mcod/aed/tests --rootdir=. --ignore=mcod/aed/tests/test_remote_check.py -q`
 
@@ -50,4 +52,4 @@ Zgodnie z regulaminem zadania (§2 ust. 7-8) wskazujemy zakres użycia AI:
 
 ## Dane i licencje
 - Zbiór zbiorczy jest udostępniany na licencji **CC BY 4.0**. Zasady wobec źródeł o innych licencjach (w tym OpenStreetMap, ODbL) opisuje `JURY.md`.
-- Dane w `aed-demo/` i `backend/mcod/aed/demo_data/` są **syntetyczne** (fikcyjni dysponenci).
+- Dane w `przykladowe-dane/` i `backend/mcod/aed/demo_data/` są **syntetyczne** (fikcyjni dysponenci).

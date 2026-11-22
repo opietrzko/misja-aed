@@ -7,6 +7,8 @@ Portal dane.gov.pl dostaje **wykaz AED** - nowy typ zasobu (wzorowany na wykazie
 własny wykaz w jednolitym układzie kolumn, a portal **codziennie scala je w jeden ogólnopolski wykaz**.
 Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dysponenta i zakres referencyjny źródła.
 
+Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pliki do ręcznego testu: [`przykladowe-dane/`](przykladowe-dane/).
+
 ## Gdzie sprawdzić wymagania z treści zadania
 
 | # | Wymaganie | Gdzie |
@@ -46,7 +48,7 @@ Dysponenci mają dane w różnych układach, więc portal ma konwerter (panel ad
 
 Zasady: **działa na jawnych regułach, bez AI**, więc wynik jest powtarzalny i nie wymaga instalowania modeli. Czego źródło nie podaje (np. daty weryfikacji), konwerter **nie zgaduje**:
 trzeba to wpisać jawnie, inaczej wiersz jest odrzucany. Dla układu PL-1992 kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest opcja odwrócenia).
-Pliki przykładowe (syntetyczne): `backend/mcod/aed/demo_data/przyklad-inne-kolumny.csv` (inne nazwy kolumn, PL-1992, daty dd.mm.rrrr) i `przyklad-osm-overpass-SYNTETYCZNE.json` (format Overpass, profil `osm`).
+Pliki przykładowe (syntetyczne) są w `przykladowe-dane/02-konwerter/` (inne nazwy kolumn z PL-1992, format Overpass z profilem `osm`, xlsx z polskimi nagłówkami i literówkami, współrzędne w jednej kolumnie); README folderu podaje oczekiwany wynik każdego pliku.
 Prawdziwe dane z OSM pobierzesz zapytaniem Overpass `[out:json][timeout:60];area["ISO3166-1"="PL"][admin_level=2]->.pl;node["emergency"="defibrillator"](area.pl);out;`.
 OSM ma licencję ODbL (share-alike): taki wykaz publikujemy osobno, nie mieszamy go ze zbiorem na CC BY.
 
@@ -107,12 +109,12 @@ Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
   administracyjnego portalu ma sztywne body 960 px i nie jest responsywna, więc **na naszej stronie** zwalniamy szerokość i układamy menu pod treścią na wąskich ekranach. Sprawdzone w emulacji
   telefonu (375 px), tabletu (768 px) i desktopu na statycznej kopii strony z prawdziwymi stylami panelu: brak poziomego przewijania, tabele przewijają się w kontenerach. Pozostałe strony panelu
   (m.in. formularz zasobu z naszym polem) zostają takie, jakie są w portalu. Prawdziwego telefonu i działającego panelu (certyfikat) nie sprawdzaliśmy.
-- **Testy.** Nasze: 145 testów logiki AED i 6 testów walidacji zdalnego wykazu. Istniejące testy portalu uruchomiliśmy w wybranych grupach: harvester (schematy, serializery, CKAN, XML) bez porażek po
+- **Testy.** Nasze: 156 testów logiki AED (w tym zgodność przykładowych danych z ich opisami) i 6 testów walidacji zdalnego wykazu; instrukcja w `TESTOWANIE.md`. Istniejące testy portalu uruchomiliśmy w wybranych grupach: harvester (schematy, serializery, CKAN, XML) bez porażek po
   jednej poprawce wzorca, zasoby, formularz, modele, DGA, indeksowanie i wyszukiwarka (139 testów) oraz komponent API (216 testów), wszystkie zielone. **Nie uruchamialiśmy pełnego zestawu** (m.in. CMS, raporty,
   użytkownicy) ani pełnego importu XML i CKAN. `makemigrations --check` zgłasza migrację w aplikacji `users` (`last_logged_method`), niezwiązaną z naszymi zmianami.
 
 ## Dane demonstracyjne
-Pliki w `backend/mcod/aed/demo_data/` (generator: `aed-demo/generate_demo.py`) są **syntetyczne** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawierają celowe błędy, żeby pokazać walidację
+Folder `przykladowe-dane/` (generator: `aed-demo/generate_demo.py`; kopie wykazów dostawców w `backend/mcod/aed/demo_data/` dla komendy `aed_seed_demo`) jest **syntetyczny** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawiera celowe błędy, żeby pokazać walidację
 i deduplikację: 14 wierszy wejściowych → 2 odrzucone → 1 duplikat → 11 rekordów w wykazie zbiorczym.
 
 ## Wykorzystanie AI

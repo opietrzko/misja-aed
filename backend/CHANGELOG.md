@@ -12,6 +12,7 @@ ______________________________________________________________________
 - Dodano automatyczne mapowanie współrzędnych na mapę portalu dla zasobów z flagą wykazu AED
 - Dodano konwerter plików do wzorca AED (reguły, bez AI): komenda `aed_convert` oraz strona `/aed/konwerter/` w panelu administracyjnym z pobieraniem wzorca xlsx, responsywna na telefonie i tablecie
 - Dodano algorytmy jakości danych wykazu AED (jawne reguły, bez AI): wiarygodność rekordu 0-100, flagi anomalii, parser godzin dostępności do jednolitego zapisu, normalizacja i rozbijanie adresów, deduplikacja z podobieństwem adresu i pewnością połączenia oraz wykrywanie zmian między scaleniami w raporcie
+- Dodano folder `przykladowe-dane/` z syntetycznymi plikami do importu i testów (wykazy dostawców, pliki dla konwertera, pliki odrzucane, import XML 1.14) wraz z opisem oczekiwanych wyników oraz testem pilnującym ich zgodności
 - Dodano komendy `aed_build_main`, `aed_make_template` i `aed_seed_demo`
 - Dodano pole `contains_aed_list` w API zasobów (`/resources`, `/search`) oraz filtr o tej nazwie
 - Dodano schemat XSD harvestera 1.14 z opcjonalnym elementem `containsAedList` oraz walidację wykazu AED w imporcie XML i CKAN (nowy kod błędu importu częściowego `RES_AED_INVALID`)
@@ -24,6 +25,7 @@ ______________________________________________________________________
 
 ### Fixes
 
+- Konwerter AED: rozpoznawanie nagłówków „Nr ewid." jako identyfikatora oraz numerowanie nadawanych identyfikatorów wg pozycji wiersza w pliku (odrzucone wiersze miały w raporcie ten sam identyfikator)
 - Frontend: `LeafletService` używa importu ES zamiast `require('leaflet')`, który nie działał na serwerze deweloperskim (mapa zasobu się nie renderowała)
 
 ### Breaks
