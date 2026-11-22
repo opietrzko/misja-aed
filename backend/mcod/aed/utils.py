@@ -84,9 +84,7 @@ class AEDResourceReadError(Exception):
     """Źródłowy zasób nie może zostać odczytany."""
 
 
-# --------------------------------------------------------------------------- #
 # Czysta logika (pandas)
-# --------------------------------------------------------------------------- #
 
 
 def read_aed_file(file, extension: Optional[str]) -> Optional[pd.DataFrame]:
@@ -251,7 +249,7 @@ def _match(df: pd.DataFrame, i: int, j: int, certain_m: float, max_m: float) -> 
 
 
 def _find_duplicate(df, grid, i: int, certain_m: float, max_m: float) -> Optional[Tuple[int, float, int]]:
-    """Najpewniejszy wcześniej zachowany rekord INNEGO dysponenta: (indeks, odległość, pewność) albo None."""
+    """Najpewniejszy wcześniej zachowany rekord innego dysponenta: (indeks, odległość, pewność) albo None."""
     best = None
     for j in _neighbors(grid, df.at[i, COL_LAT], df.at[i, COL_LON]):
         if COL_PROVIDER in df.columns and df.at[j, COL_PROVIDER] == df.at[i, COL_PROVIDER]:
@@ -359,7 +357,7 @@ def _report_row(provider, resource_id, row, aed_id, result, reason) -> Dict[str,
 
 
 def build_report_df(report: List[Dict[str, Any]]) -> pd.DataFrame:
-    """Raport scalania jako tabela. Gdy uwag nie ma, jedna wiersz „brak uwag” (pusty plik nie przechodzi walidacji portalu)."""
+    """Raport scalania jako tabela. Gdy uwag nie ma, jeden wiersz „brak uwag” (pusty plik nie przechodzi walidacji portalu)."""
     if not report:
         report = [_report_row("", None, None, "", REPORT_OK, "wszystkie wykazy przetworzone bez zastrzeżeń")]
     df = pd.DataFrame(report, columns=REPORT_COLUMNS)
@@ -510,9 +508,7 @@ def apply_aed_geo_schema(tds: Dict[str, Any]) -> Dict[str, Any]:
     return tds
 
 
-# --------------------------------------------------------------------------- #
 # Część bazodanowa
-# --------------------------------------------------------------------------- #
 
 
 AED_REMOTE_NO_URL = "no_url"
@@ -755,7 +751,7 @@ def _get_or_create_main_dataset():
 
 
 def create_or_update_main_aed_resource(file_path: Path):
-    """Zasób zbiorczy: pierwszy raz tworzy, potem AKTUALIZUJE w miejscu (ten sam id i adres).
+    """Zasób zbiorczy: pierwszy raz tworzy, potem aktualizuje w miejscu (ten sam id i adres).
 
     Wzorzec z panelu administracyjnego: ``update_or_create`` pliku głównego i ``revalidate()``, który
     ponownie przetwarza dane, schemat mapy i indeks w Elasticsearch. W przeciwieństwie do wykazu DGA nie usuwamy

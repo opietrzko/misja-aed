@@ -88,7 +88,7 @@ def diff_main(previous: Optional[pd.DataFrame], current: pd.DataFrame) -> List[D
         if k not in prev:
             continue
         diffs = [
-            f"{c}: {_text(prev[k].get(c))} → {_text(cur[k].get(c))}"
+            f"{c}: {_text(prev[k].get(c))} -> {_text(cur[k].get(c))}"
             for c in TRACKED_COLUMNS
             if c in prev[k] and _differs(c, prev[k].get(c), cur[k].get(c))
         ]

@@ -39,7 +39,7 @@ DESCRIPTIONS = {
         "zalecane",
         "hol główny, przy recepcji",
     ),
-    "Rodzaj obiektu": ("Typ miejsca: urząd, szkoła, dworzec, galeria, przestrzeń publiczna…", "zalecane", "urząd"),
+    "Rodzaj obiektu": ("Typ miejsca: urząd, szkoła, dworzec, galeria, przestrzeń publiczna...", "zalecane", "urząd"),
     "Dostępność": ("Jedna z wartości: " + ", ".join(AVAILABILITY_VALUES) + ".", "tak", "w godzinach"),
     "Godziny dostępności": ("Np. „pn-pt 7:30-16:00”; dla „całodobowo” puste.", "jeśli w godzinach", "pn-pt 7:30-16:00"),
     "Sposób dostępu": ("Jedna z wartości: " + ", ".join(ACCESS_VALUES) + ".", "tak", "swobodny"),
@@ -65,7 +65,7 @@ AGGREGATE_NOTES = {
     "Liczba źródeł": (
         "wyliczana: ile wykazów zgłosiło to samo urządzenie (różni dysponenci, " "do 10 m zawsze, do 50 m przy podobnym adresie)"
     ),
-    "Pozostali dysponenci": "wyliczana: pozostali dysponenci tego urządzenia w formie „Dysponent (identyfikator); …”",
+    "Pozostali dysponenci": "wyliczana: pozostali dysponenci tego urządzenia w formie „Dysponent (identyfikator); ...”",
     "Aktualność": (
         "wyliczana: nieczynny / nieaktualny (weryfikacja starsza niż 2 lata) / do weryfikacji "
         "(starsza niż rok, status „do weryfikacji” lub data z przyszłości) / aktualny"

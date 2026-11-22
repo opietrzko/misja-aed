@@ -53,11 +53,11 @@ Z katalogu `backend/`, w venv z `flake8 black==24.3.0 isort`:
 Oczekiwane: bez uwag.
 
 ## 2. Ręczne scenariusze (end-to-end)
-Id zbioru i zasobu zależą od bazy. U nas zbiór zbiorczy ma id 4214, a zasób 40213. Szukaj po tytule „Ogólnopolski wykaz defibrylatorów AED".
+Id zbioru i zasobu zależą od bazy. U nas zbiór zbiorczy ma id 4214, a zasób 40213. Szukaj po tytule „Ogólnopolski wykaz defibrylatorów AED”.
 
 **S1. Dostawca publikuje wykaz.** `docker exec mcod-admin python manage.py aed_seed_demo`, potem `aed_build_main`.
 Oczekiwane: 3 instytucje z wykazami, **11 rekordów** w zbiorczym (z 14 wierszy), 3 uwagi w raporcie. Szczegóły: `przykladowe-dane/01-wykazy-dostawcow/README.md`.
-Ręcznie: panel, Zasoby, Dodaj, plik z `01-wykazy-dostawcow/`, „Wykaz defibrylatorów AED: Tak".
+Ręcznie: panel, Zasoby, Dodaj, plik z `01-wykazy-dostawcow/`, „Wykaz defibrylatorów AED: Tak”.
 
 **S2. Odrzucenia.** Pliki z `przykladowe-dane/03-pliki-odrzucane/` (oczekiwane komunikaty w README tego folderu): zła kolejność kolumn, zły format, drugi wykaz tej samej instytucji.
 
@@ -65,12 +65,12 @@ Ręcznie: panel, Zasoby, Dodaj, plik z `01-wykazy-dostawcow/`, „Wykaz defibryl
 Oczekiwane: 3 z 4, 3 z 5 (profil `osm`, data 2026-11-20), 5 z 6, 3 z 3. Pobierz wzorzec przyciskiem na górze strony.
 
 **S4. Efekt w portalu.** Strona zbioru zbiorczego ma 3 zasoby: wykaz (CSV), raport z ostatniego scalenia i wersję GeoJSON.
-- Zasób zbiorczy: licencja CC BY 4.0 (sekcja „Warunki wykorzystywania", Rozwiń), tabela z kolumnami Aktualność, Wiarygodność, Uwagi do danych, zakładka **Mapa** z 11 punktami.
+- Zasób zbiorczy: licencja CC BY 4.0 (sekcja „Warunki wykorzystywania”, Rozwiń), tabela z kolumnami Aktualność, Wiarygodność, Uwagi do danych, zakładka **Mapa** z 11 punktami.
 - Id zasobu zbiorczego **nie zmienia się** po kolejnym `aed_build_main` (aktualizacja w miejscu).
 - Raport ma wiersze z numerem wiersza w pliku i powodem.
 
-**S5. Zmiany między scaleniami.** Po pierwszym scaleniu uruchom `aed_build_main` drugi raz: w raporcie nie ma wierszy „zmieniony rekord". Zmień dane dostawcy
-(podmień plik zasobu) i scal ponownie: w raporcie pojawiają się wiersze „nowy rekord", „usunięto z wykazu zbiorczego" lub „zmieniony rekord" z opisem „przed → po". (Mechanizm sprawdziliśmy na prawdziwym poprzednim pliku z symulowanymi zmianami, a nie przez edycję pliku w panelu.)
+**S5. Zmiany między scaleniami.** Po pierwszym scaleniu uruchom `aed_build_main` drugi raz: w raporcie nie ma wierszy „zmieniony rekord”. Zmień dane dostawcy
+(podmień plik zasobu) i scal ponownie: w raporcie pojawiają się wiersze „nowy rekord”, „usunięto z wykazu zbiorczego” lub „zmieniony rekord” z opisem „przed -> po”. (Mechanizm sprawdziliśmy na prawdziwym poprzednim pliku z symulowanymi zmianami, a nie przez edycję pliku w panelu.)
 
 **S6. API.** Filtr wykazów AED (oczekiwane `count: 4`) i punkty mapy:
 ```
@@ -91,7 +91,7 @@ etykiety pól formularza.
 - **Pełnego importu XML 1.14 i CKAN** przez źródło danych w panelu (sprawdziliśmy walidatory zasobu na przykładowych danych i plik XML względem XSD).
 - **Pełnego zestawu testów portalu** (m.in. CMS, raporty, użytkownicy). `makemigrations --check` zgłasza migrację w aplikacji `users` (`last_logged_method`), niezwiązaną z naszymi zmianami.
 - **Prawdziwego telefonu** i działającego panelu w przeglądarce wbudowanej w narzędzia (certyfikat): responsywność sprawdzona w emulacji na statycznej kopii strony z prawdziwymi stylami panelu.
-- **Prawdziwych danych dysponentów** (przykłady są syntetyczne) i geokodowania adresów (konwerter wymaga współrzędnych, patrz „Ograniczenia" w `JURY.md`).
+- **Prawdziwych danych dysponentów** (przykłady są syntetyczne) i geokodowania adresów (konwerter wymaga współrzędnych, patrz „Ograniczenia” w `JURY.md`).
 - **Harmonogramu** codziennego scalenia (Celery beat nie jest lokalnie włączony; scalenie uruchamia się komendą).
 
 ## 4. Typowe problemy
@@ -99,5 +99,5 @@ etykiety pól formularza.
 - **`mcod-rabbitmq` kończy się od razu** (błąd `.erlang.cookie eacces`): usuń wolumen `backend_rabbitmq_vol` i uruchom ponownie.
 - **Indeksy Elasticsearch odrzucają ustawienia** (`unknown setting [index.timeout]`): usuń linie `"timeout": 1` z `ELASTICSEARCH_DSL_INDEX_SETTINGS` w `mcod/settings/local.py`.
 - **Pliki z komend `docker compose run` nie trafiają do Celery:** zapisujące komendy uruchamiaj przez `docker exec mcod-admin ...`.
-- **Zasób zbiorczy ma status błędu danych:** sprawdź komunikat zadania walidacji zasobu. Kolumna liczbowa z pustymi wartościami psuje typ wnioskowany przez portal (dlatego „Pewność połączenia" jest tekstem).
+- **Zasób zbiorczy ma status błędu danych:** sprawdź komunikat zadania walidacji zasobu. Kolumna liczbowa z pustymi wartościami psuje typ wnioskowany przez portal (dlatego „Pewność połączenia” jest tekstem).
 - **Mac zamula:** obrazy są amd64 i działają w emulacji. Zamknij inne programy zajmujące pamięć (np. modele lokalne) i wyłącz zbędne kontenery (`mcod-smtp`, `mcod-api`).

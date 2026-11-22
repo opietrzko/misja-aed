@@ -53,7 +53,7 @@ FILES = {
 }
 
 
-# --- pliki dla konwertera (inny układ niż wzorzec) ---
+# Pliki dla konwertera (inny układ niż wzorzec)
 
 POLSKIE_NAGLOWKI_COLUMNS = [
     "Nr ewid.",
@@ -84,7 +84,7 @@ JEDNA_KOLUMNA = [  # współrzędne w jednej kolumnie: "szer, dł", WKT i odwró
     ["GD-01", "Długi Targ 1, 80-828 Gdańsk", "18.64637; 54.35205", "codziennie 9-21", "czynny", "za zgodą", "2026-11-18"],
 ]
 
-# --- pliki odrzucane ---
+# Pliki odrzucane
 
 TYLKO_ADRESY_COLUMNS = ["Lp.", "Podmiot", "Obiekt", "Adres", "Lokalizacja w obiekcie", "Godz. dostępu"]
 TYLKO_ADRESY = [  # układ jak w prawdziwych wykazach urzędów: sam adres, bez współrzędnych (miejscowość fikcyjna)

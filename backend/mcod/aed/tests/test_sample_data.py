@@ -46,7 +46,7 @@ def merge(frames):
     return build_main_df(sources, report=report), report
 
 
-# --- 01: wykazy dostawców ---
+# 01: wykazy dostawców
 
 
 def test_providers_have_standard_columns_and_xlsx_matches_csv():
@@ -85,7 +85,7 @@ def test_demo_data_copies_are_in_sync():
         assert (SAMPLES / "02-konwerter" / name).read_bytes() == (DEMO_DATA / name).read_bytes()
 
 
-# --- 02: konwerter ---
+# 02: konwerter
 
 
 def test_other_columns_sample():
@@ -132,7 +132,7 @@ def test_single_coordinate_column_sample():
     assert all("współrzędne z jednej kolumny" in r["szczegoly"] for r in rows.values())
 
 
-# --- 03: pliki odrzucane ---
+# 03: pliki odrzucane
 
 
 def test_rejected_files_behave_as_documented():
@@ -155,7 +155,7 @@ def test_rejected_files_behave_as_documented():
     assert set(main[COL_FRESHNESS]) <= {"aktualny", "do weryfikacji", "nieaktualny", "nieczynny"}
 
 
-# --- 05: import XML ---
+# 05: import XML
 
 
 def test_xml_sample_is_valid_for_1_14_and_rejected_by_1_13():

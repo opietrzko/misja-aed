@@ -1,6 +1,6 @@
 """Wiarygodność rekordu (0-100) i flagi anomalii.
 
-Jawne, wyjaśnialne reguły, bez uczenia maszynowego. Wagi i progi to **nasze założenia** do dostrojenia, nie wiedza
+Jawne, wyjaśnialne reguły, bez uczenia maszynowego. Wagi i progi to nasze założenia do dostrojenia, nie wiedza
 ekspercka. Wiarygodność mówi, na ile można polegać na rekordzie jako na pomocy: czy urządzenie istnieje, jest
 aktualne, dobrze opisane i potwierdzone przez niezależne źródła.
 

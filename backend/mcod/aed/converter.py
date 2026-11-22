@@ -1,6 +1,6 @@
 """Konwerter: dowolny plik z listą AED -> wzorcowy układ wykazu AED.
 
-Bez AI w działaniu - wszystko to jawne reguły, więc wynik jest powtarzalny:
+Wszystko to jawne reguły, więc wynik jest powtarzalny:
 
 1. mapowanie kolumn: profil źródła -> słownik synonimów -> podobieństwo nazw ->
    rozpoznanie po zawartości (zakresy współrzędnych, daty, TERYT, układ PL-1992),
@@ -9,7 +9,7 @@ Bez AI w działaniu - wszystko to jawne reguły, więc wynik jest powtarzalny:
 3. walidacja tymi samymi regułami co przy scalaniu (``check_row``),
 4. raport: co poprawiono, co odrzucono i dlaczego.
 
-Dane, których źródło nie podaje (np. data weryfikacji), NIE są zgadywane: trzeba je
+Dane, których źródło nie podaje (np. data weryfikacji), nie są zgadywane: trzeba je
 podać jawnie jako wartość domyślną, inaczej wiersz jest odrzucany.
 """
 
@@ -109,9 +109,7 @@ SYNONYMS: Dict[str, List[str]] = {
 }
 
 
-# --------------------------------------------------------------------------- #
 # Parsowanie wartości
-# --------------------------------------------------------------------------- #
 
 _DMS = re.compile(r"""(\d+)\s*[°º\s]\s*(\d+)\s*['′’\s]\s*(\d+(?:[.,]\d+)?)\s*["″”]?\s*([NSEWnsew])?""")
 _WKT_POINT = re.compile(r"POINT\s*\(\s*(-?\d+(?:[.,]\d+)?)\s+(-?\d+(?:[.,]\d+)?)\s*\)", re.I)
@@ -266,9 +264,7 @@ def normalize_status(value: Any) -> Optional[str]:
     return None
 
 
-# --------------------------------------------------------------------------- #
 # Mapowanie kolumn
-# --------------------------------------------------------------------------- #
 
 
 @dataclass
@@ -448,9 +444,7 @@ def map_columns(df: pd.DataFrame, profile: Optional[Dict[str, Any]] = None) -> M
     return mapping
 
 
-# --------------------------------------------------------------------------- #
 # Konwersja
-# --------------------------------------------------------------------------- #
 
 
 def _first_value(row: pd.Series, match: Optional[ColumnMatch]) -> Any:
@@ -581,9 +575,7 @@ def convert_dataframe(
     return out[AED_COLUMNS], report, mapping
 
 
-# --------------------------------------------------------------------------- #
 # Wczytywanie plików wejściowych
-# --------------------------------------------------------------------------- #
 
 
 def read_any(path: str) -> pd.DataFrame:

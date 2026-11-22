@@ -26,9 +26,7 @@ def _clean(value: Any) -> Optional[str]:
     return text or None
 
 
-# --------------------------------------------------------------------------- #
 # Adresy
-# --------------------------------------------------------------------------- #
 
 POSTAL_RE = re.compile(r"\b(\d{2})-(\d{3})\b")
 _STREET_PREFIXES = (
@@ -91,9 +89,7 @@ def normalize_address(street: Any, city: Any = None) -> Address:
     return Address(text, city_value, postal)
 
 
-# --------------------------------------------------------------------------- #
 # Podobieństwo opisów miejsc
-# --------------------------------------------------------------------------- #
 
 _STOP_TOKENS = {"ul", "al", "pl", "os", "ulica", "aleja", "plac", "osiedle", "w", "na", "przy", "i"}
 _NUMBER_RE = re.compile(r"\d+[a-z]?")

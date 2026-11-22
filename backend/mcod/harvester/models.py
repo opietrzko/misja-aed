@@ -1051,7 +1051,7 @@ class DataSource(AdminMixin, LogMixin, SoftDeletableModel, TimeStampedModel):
             CKANPartialImportError.TOO_MANY_DGA_RESOURCES_FOR_ORGANIZATION: format_too_many_dga_resources_for_organization,  # noqa: E501
             CKANPartialImportError.ORGANIZATION_ALREADY_HAS_DGA_RESOURCE: format_org_already_has_dga_resource,
             CKANPartialImportError.ORGANIZATION_HAS_MORE_THAN_ONE_DGA_RES: format_org_has_more_than_one_dga_resource,
-            # AED (Misja AED)
+            # AED
             CKANPartialImportError.RES_AED_INVALID: format_res_aed_invalid_error_details,
         }
         return error_description_functions
@@ -1096,7 +1096,7 @@ class DataSource(AdminMixin, LogMixin, SoftDeletableModel, TimeStampedModel):
         self._ckan_validate_item_org_single_dga_json(item, dga_per_organization)
         self._ckan_validate_item_org_does_not_have_dga_resource(item)
         self._ckan_validate_item_resources_dga_url(item)
-        # AED (Misja AED) validations
+        # AED validations
         self._ckan_validate_item_resources_aed(item)
 
     @staticmethod

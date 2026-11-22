@@ -149,7 +149,7 @@ ENUM_COLUMNS: Dict[str, List[str]] = {
 POLAND_LAT_RANGE = (48.9, 55.0)
 POLAND_LON_RANGE = (14.0, 24.2)
 
-# Deduplikacja punktów RÓŻNYCH dysponentów. Do DEDUP_CERTAIN_METERS to na pewno to samo urządzenie.
+# Deduplikacja punktów różnych dysponentów. Do DEDUP_CERTAIN_METERS to na pewno to samo urządzenie.
 # Od DEDUP_CERTAIN_METERS do DEDUP_MAX_METERS łączymy tylko, gdy opisy miejsca są podobne (co najmniej DEDUP_TEXT_MIN).
 # Progi to nasze założenia (dokładność współrzędnych dysponentów bywa rzędu kilku-kilkunastu metrów).
 DEDUP_CERTAIN_METERS = 10

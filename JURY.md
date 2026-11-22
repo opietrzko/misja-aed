@@ -94,7 +94,7 @@ Użytkownikiem zbioru są służby ratownicze, ale także każdy, kto szuka najb
 
 ## Licencja
 Zbiór zbiorczy jest udostępniany na **CC BY 4.0** (uznanie autorstwa): wolna i otwarta, pozwala na użycie komercyjne i przetwarzanie, a nazwa dysponenta
-zostaje przy danych w kolumnach „Nazwa dysponenta zasobu" i „Zakres referencyjny źródła". Licencję ustawia kod przy każdym scaleniu (`ensure_main_dataset_license`).
+zostaje przy danych w kolumnach „Nazwa dysponenta zasobu” i „Zakres referencyjny źródła”. Licencję ustawia kod przy każdym scaleniu (`ensure_main_dataset_license`).
 
 Zasady wobec źródeł o innych warunkach (rekomendacja, nie opinia prawna):
 - do zbioru zbiorczego trafiają wykazy na licencji nie ostrzejszej niż CC BY (CC0, CC BY, dane publiczne),
@@ -107,12 +107,12 @@ Zasady wobec źródeł o innych warunkach (rekomendacja, nie opinia prawna):
 Dysponenci mają dane w różnych układach, więc portal ma konwerter (panel administracyjny, adres `/aed/konwerter/`, albo komenda `manage.py aed_convert`).
 1. Wgraj plik (csv, xlsx, xls, json/GeoJSON, także wynik zapytania Overpass z OpenStreetMap) i opcjonalnie wybierz profil źródła (`osm`). Na górze strony jest przycisk pobrania wzorcowego pliku (xlsx).
 2. Konwerter dopasowuje kolumny: profil, nazwa lub synonim, podobieństwo nazw, a na końcu zawartość kolumny (zakresy współrzędnych, daty, układ PL-1992).
-3. Ujednolica wartości: współrzędne (przecinek, zapis stopniowy, WKT, PL-1992 → WGS84), „całą dobę" → `całodobowo`, „sprawny" → `czynny` itd.
+3. Ujednolica wartości: współrzędne (przecinek, zapis stopniowy, WKT, PL-1992 -> WGS84), „całą dobę” -> `całodobowo`, „sprawny” -> `czynny` itd.
 4. Pokazuje mapowanie z poziomem pewności, podgląd i raport każdego wiersza (ok, poprawiono, odrzucono wraz z powodem). Wynik i raport można pobrać jako CSV.
-5. Wynik wgrywasz jako zasób z flagą „Wykaz defibrylatorów AED".
+5. Wynik wgrywasz jako zasób z flagą „Wykaz defibrylatorów AED”.
 
 Zasady: **działa na jawnych regułach, bez AI**, więc wynik jest powtarzalny i nie wymaga instalowania modeli. Czego źródło nie podaje (np. daty weryfikacji), konwerter **nie zgaduje**:
-trzeba to wpisać jawnie, inaczej wiersz jest odrzucany. Dla układu PL-1992 kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest opcja odwrócenia).
+trzeba to wpisać jawnie, inaczej wiersz jest odrzucany. Dla układu PL-1992 kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód” i zaznaczamy to w raporcie (jest opcja odwrócenia).
 Pliki przykładowe (syntetyczne) są w `przykladowe-dane/02-konwerter/` (inne nazwy kolumn z PL-1992, format Overpass z profilem `osm`, xlsx z polskimi nagłówkami i literówkami, współrzędne w jednej kolumnie); README folderu podaje oczekiwany wynik każdego pliku.
 Prawdziwe dane z OSM pobierzesz zapytaniem Overpass `[out:json][timeout:60];area["ISO3166-1"="PL"][admin_level=2]->.pl;node["emergency"="defibrillator"](area.pl);out;`.
 OSM ma licencję ODbL (share-alike): taki wykaz publikujemy osobno, nie mieszamy go ze zbiorem na CC BY.
@@ -140,10 +140,10 @@ Wszystko deterministyczne, na pandas i bibliotece standardowej, bez nowych zale�
 - **Parser godzin:** z „pn-pt 7:30-16:00”, „Mo-Fr 08:00-18:00”, „godz: 8.00-18.00 w dni robocze”, „od 8 do 16 codziennie”, „pn-pt 7-17, sob 9-13” robi jednolity
   zapis (`Mo-Fr 07:30-16:00; Sa 09:00-13:00`, `24/7`). Nie zgaduje: godziny bez dni, niepoprawne albo nakładające się przedziały zostają nierozpoznane (kolumna
   „Godziny (znormalizowane)” pusta i flaga w uwagach).
-- **Adresy:** „ulica Paradna 36, 93-345 Łódź” → „ul. Paradna 36”, miejscowość „Łódź” (gdy nie podano jej osobno), kod „93-345” w osobnej kolumnie. Konwerter uzupełnia
+- **Adresy:** „ulica Paradna 36, 93-345 Łódź” -> „ul. Paradna 36”, miejscowość „Łódź” (gdy nie podano jej osobno), kod „93-345” w osobnej kolumnie. Konwerter uzupełnia
   miejscowość z adresu. Kod pocztowy bez myślnika nie jest rozpoznawany (łatwo go pomylić z numerem budynku).
 - **Wykrywanie zmian między scaleniami** w raporcie: nowe, usunięte i zmienione rekordy (status, dostępność, sposób dostępu, data weryfikacji, współrzędne) z opisem
-  „przed → po”, po kluczu (dysponent, identyfikator).
+  „przed -> po”, po kluczu (dysponent, identyfikator).
 
 ## Dostawcy publikujący przez harvester (XML i CKAN)
 Wykaz AED nie wymaga ręcznego klikania w panelu. Instytucja, która zasila portal harvesterem, oznacza zasób flagą i dostaje tę samą walidację co w formularzu:
@@ -158,7 +158,7 @@ Konwerter pokazuje mapowanie kolumn z poziomem pewności, podgląd wyniku i rapo
 Użytkownik końcowy dostaje dane w tabeli, na mapie i w formatach maszynowych, z oceną aktualności i wiarygodności przy każdym punkcie. Dostępności i responsywności dotyczy punkt „Dostępność i telefon” w ograniczeniach poniżej.
 
 ## Ograniczenia
-Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
+Lista do slajdu „ograniczenia” (stan na dziś, uczciwie):
 - **Zakres zmian w portalu (założenie).** Nie mogliśmy potwierdzić z organizatorem, jak szeroko wolno rozszerzać kod portalu. Oparliśmy się na wskazówce mentora z czatu
   hackathonu, że trzeba „dostosować i przebudować logikę i metody w portalu”, aby wykazy można było pobierać i scalać w jedną standardową listę, oraz na jego zastrzeżeniu, że
   nie wolno zmieniać zasad publikacji (za dane odpowiada dostawca, a nie portal). Zmiany w istniejącym kodzie są addytywne: 18 plików, +277 / -5 linii, **zero nowych zależności**,
@@ -166,13 +166,13 @@ Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
   (opcjonalny element, starsze wersje działają bez zmian), poprawka frontu Leaflet (obejście błędu serwera deweloperskiego) i `host-gateway` w docker-compose (tylko środowisko lokalne).
 - **Brak geokodowania adresów w środowisku lokalnym.** Konwerter wymaga współrzędnych i nie zgaduje ich z adresu. Portal dane.gov.pl ma własny geokoder i potrafi wyliczyć punkty
   z adresów (miejscowość, kod pocztowy, ulica, numer), ale jego usługi (`GEOCODER_URL`) nie ma w repozytorium ani w naszym środowisku. Przykład z praktyki: prawdziwy wykaz z Łodzi
-  (140 adresów, bez współrzędnych) jest przez konwerter odrzucany z komunikatem „brak współrzędnych (jest adres)". Rozwiązania spoza naszego środowiska: współrzędne od dysponenta
+  (140 adresów, bez współrzędnych) jest przez konwerter odrzucany z komunikatem „brak współrzędnych (jest adres)”. Rozwiązania spoza naszego środowiska: współrzędne od dysponenta
   albo geokoder portalu. Zewnętrzne geokodowanie (np. z OpenStreetMap) odrzuciliśmy ze względu na licencję (ODbL, share-alike, niezgodna ze zbiorem na CC BY).
 - **Dane demonstracyjne są syntetyczne** (fikcyjni dysponenci). Konwerter nie był testowany na szerokim zestawie prawdziwych plików, poza jednym wykazem z Łodzi.
-- **Licencje źródeł.** OpenStreetMap (ODbL) publikujemy osobno, a nie w zbiorze zbiorczym. Dane PRG (GUGiK) są „bezpłatne i do dowolnego wykorzystania" z podaniem źródła, ale bez nazwanej licencji. To rekomendacje, a nie opinia prawna.
+- **Licencje źródeł.** OpenStreetMap (ODbL) publikujemy osobno, a nie w zbiorze zbiorczym. Dane PRG (GUGiK) są „bezpłatne i do dowolnego wykorzystania” z podaniem źródła, ale bez nazwanej licencji. To rekomendacje, a nie opinia prawna.
 - **Deduplikacja jest heurystyką** (odległość do 10 m, do 50 m przy podobnym adresie). Gdy dysponent ma dwa urządzenia blisko jednego cudzego, oba mogą zostać do niego dołączone.
 - **Aktualność, wiarygodność i dedup:** progi 12 i 24 miesięcy, wagi wiarygodności oraz promienie 10 i 50 m to nasze propozycje, nie wymóg.
-- **PL-1992:** kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest przełącznik).
+- **PL-1992:** kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód” i zaznaczamy to w raporcie (jest przełącznik).
 - **Import CKAN** nie sprawdza, czy instytucja ma już wykaz AED dodany inną drogą (XML sprawdza). Walidatory XML i CKAN sprawdzone na przykładowych danych, nie na pełnym imporcie harvestera.
 - **Harmonogram** codziennego scalania jest w kodzie (Celery beat), ale lokalnie nie jest uruchomiony. Scalanie uruchamialiśmy ręcznie komendą `aed_build_main`.
 - **Dostępność i telefon.** Strona konwertera przeszła kontrole statyczne (etykiety pól, opisy i nagłówki tabel, unikalne identyfikatory, kontrast kolorów AA, najniższy 4,92). Powłoka panelu
@@ -185,7 +185,7 @@ Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
 
 ## Dane demonstracyjne
 Folder `przykladowe-dane/` (generator: `aed-demo/generate_demo.py`; kopie wykazów dostawców w `backend/mcod/aed/demo_data/` dla komendy `aed_seed_demo`) jest **syntetyczny** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawiera celowe błędy, żeby pokazać walidację
-i deduplikację: 14 wierszy wejściowych → 2 odrzucone → 1 duplikat → 11 rekordów w wykazie zbiorczym.
+i deduplikację: 14 wierszy wejściowych -> 2 odrzucone -> 1 duplikat -> 11 rekordów w wykazie zbiorczym.
 
 ## Wykorzystanie AI
 Pełny opis w [`README.md`](README.md#wykorzystanie-sztucznej-inteligencji). W skrócie: kod, testy i dokumentację przygotowano z pomocą Claude (Claude Code) pod kierunkiem zespołu,

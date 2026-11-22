@@ -30,8 +30,8 @@ def test_new_removed_and_changed_records():
     changed = by_result["zmieniony rekord"]
     assert changed["Identyfikator AED"] == "A"
     assert (
-        "Status urządzenia: czynny → nieczynny" in changed["Powód"]
-        and "Data ostatniej weryfikacji: 2026-10-01 → 2026-11-01" in changed["Powód"]
+        "Status urządzenia: czynny -> nieczynny" in changed["Powód"]
+        and "Data ostatniej weryfikacji: 2026-10-01 -> 2026-11-01" in changed["Powód"]
     )
 
 

@@ -56,7 +56,7 @@ def test_parse_point_wkt_pair_and_swapped():
 def test_pl1992_conversion_and_axis_order_is_explicit():
     lat, lon = from_pl1992(566859.11, 244266.77)  # (wschód, północ)
     assert lat == pytest.approx(50.0619, abs=1e-3) and lon == pytest.approx(19.9344, abs=1e-3)
-    # zamienione osie dają INNY punkt (też w Polsce), dlatego kolejność nie jest zgadywana
+    # zamienione osie dają inny punkt (też w Polsce), dlatego kolejność nie jest zgadywana
     swapped = from_pl1992(244266.77, 566859.11)
     assert swapped is not None and swapped != (lat, lon)
 

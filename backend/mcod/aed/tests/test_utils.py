@@ -258,7 +258,7 @@ def test_geojson_is_json_serializable_with_numpy_values():
     assert props["Dni od ostatniej weryfikacji"] == 21 and props["Aktualność"] == "aktualny"
 
 
-# --- nowe algorytmy: deduplikacja z tekstem, wzbogacanie, wiarygodność ---
+# Deduplikacja z tekstem, wzbogacanie, wiarygodność
 
 NORTH_30M = 50.06027  # ok. 30 m na północ od 50.06
 
