@@ -1,0 +1,5 @@
+Nr;Gmina;Adres;Lokalizacja w budynku;Rodzaj;Y;X;Stan;Dostępny;Godziny;Data przeglądu
+A-17;Kraków;ul. Szewska 4;hol, parter;szkoła;566859,11;244266,77;sprawny;tak;całą dobę;14.11.2026
+A-18;Kraków;ul. Dietla 12;portiernia;urząd;567595,40;243764,66;uszkodzony;tak;pn-pt 7-17;02.10.2026
+A-19;Poznań;pl. Wolności 1;przy windzie;urząd;359510,96;506683,49;sprawny;tak;pn-pt 7-16;05.11.2026
+A-20;Poznań;ul. Błędna 5;klatka B;budynek mieszkalny;358565,45;506933,15;sprawny;nie;;bez daty

@@ -1,0 +1,21 @@
+{
+  "nazwa": "OpenStreetMap (emergency=defibrillator, format Overpass JSON lub GeoJSON)",
+  "uwagi": "OSM nie podaje stanu urządzenia ani daty weryfikacji, jeśli brak check_date. Status domyślnie 'do weryfikacji', a datę stanu danych trzeba podać jawnie (parametr --data-zrodla). Licencja ODbL (share-alike): wykaz publikować osobno, nie mieszać ze zbiorem na CC BY.",
+  "columns": {
+    "Identyfikator AED": ["osm_id"],
+    "Szerokość geograficzna": ["lat"],
+    "Długość geograficzna": ["lon"],
+    "Miejscowość": ["addr:city"],
+    "Ulica i numer": ["_street"],
+    "Opis lokalizacji": ["defibrillator:location", "description", "name"],
+    "Rodzaj obiektu": ["indoor", "building", "amenity"],
+    "Godziny dostępności": ["opening_hours"],
+    "Sposób dostępu": ["access"],
+    "Data ostatniej weryfikacji": ["check_date"],
+    "Kontakt instytucjonalny": ["contact:email", "email"]
+  },
+  "defaults": {
+    "Status urządzenia": "do weryfikacji",
+    "Sposób dostępu": "za zgodą"
+  }
+}
