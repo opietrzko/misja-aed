@@ -185,6 +185,12 @@ class ResourceApiSearchRequest(ListingSchema):
         doc_base_url="/resources",
         doc_field_name="contains_protected_data",
     )
+    contains_aed_list = search_fields.FilterField(
+        BooleanTermSchema,
+        doc_template="docs/generic/fields/boolean_term_field.html",
+        doc_base_url="/resources",
+        doc_field_name="contains_aed_list",
+    )
     language = search_fields.FilterField(
         StringTermSchema,
         doc_template="docs/generic/fields/string_term_field.html",

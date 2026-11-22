@@ -150,6 +150,7 @@ class ResourceApiAttrs(ObjectAttrs, HighlightObjectMixin):
     has_high_value_data_from_ec_list = fields.Boolean()
     has_research_data = fields.Boolean()
     contains_protected_data = fields.Boolean()
+    contains_aed_list = fields.Boolean()
     regions = fields.Method("get_regions")
     files = fields.Method("get_files")
     supplement_docs = fields.Nested(SupplementSchema, data_key="supplements", many=True)

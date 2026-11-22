@@ -106,6 +106,7 @@ class CommonObjectApiAttrs(ObjectAttrs, HighlightObjectMixin, LikeableSearchApiO
     visualization_types = fields.List(fields.Str())
     language = fields.Str()
     contains_protected_data = fields.Boolean()
+    contains_aed_list = fields.Boolean()
 
     # showcases
     author = fields.Str()

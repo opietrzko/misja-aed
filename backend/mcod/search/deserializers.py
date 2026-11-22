@@ -294,6 +294,13 @@ class ApiSearchRequest(ListingSchema):
         doc_base_url="/search",
         doc_field_name="contains_protected_data",
     )
+    contains_aed_list = fields.FilterField(
+        BooleanTermSchema,
+        query_field="contains_aed_list",
+        doc_template="docs/generic/fields/boolean_term_field.html",
+        doc_base_url="/search",
+        doc_field_name="contains_aed_list",
+    )
 
     @validates("q")
     def validate_q(self, queries, down_limit=2, up_limit=3000):

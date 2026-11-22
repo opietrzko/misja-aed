@@ -127,6 +127,7 @@ class ResourceDocument(ExtendedDocument):
     files = files_field(attr="all_files")
     language = fields.KeywordField()
     contains_protected_data = fields.BooleanField()
+    contains_aed_list = fields.BooleanField()
 
     class Index:
         name = django_settings.ELASTICSEARCH_INDEX_NAMES["resources"]
