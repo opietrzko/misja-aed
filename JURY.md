@@ -14,9 +14,9 @@ Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dy
 | 1 | Wzorcowy zakres danych (xlsx) | `aed-demo/wzorcowy-zakres-danych-AED.xlsx` (arkusze: wzór, opis kolumn, kolumny wykazu zbiorczego) |
 | 2 | Dane z wielu rozproszonych źródeł ze wskazaniem zakresu referencyjnego | wykaz zbiorczy: kolumny „Nazwa dysponenta zasobu”, „Zakres referencyjny źródła”, „Data aktualizacji zasobu źródłowego” |
 | 3 | Integracja informacji od wszystkich dysponentów w jednym zbiorze | zbiór „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy” |
-| 4 | Format odczytywalny maszynowo | zasób zbiorczy w CSV; źródła csv/xls/xlsx |
+| 4 | Format odczytywalny maszynowo | zasób zbiorczy w CSV i w GeoJSON, raport scalania w CSV; źródła csv/xls/xlsx |
 | 5 | Zgodność z zasadami portalu | rozszerzenie istniejących mechanizmów portalu: flaga zasobu, walidacja w formularzu, zadanie Celery - patrz `backend/mcod/aed/` |
-| 6 | Kod źródłowy | `backend/mcod/aed/`, zmiany w `backend/mcod/resources/` (forms, admin, models, migracja 0076) |
+| 6 | Kod źródłowy | nowy moduł `backend/mcod/aed/`; zmiany w istniejących plikach: `resources` (forms, admin, models, migracja 0076, API i indeks), `harvester`, `search`, `settings`, `celeryapp`; pełna lista w `backend/CHANGELOG.md` |
 
 ## Kroki dla dostawcy danych (panel administracyjny)
 1. Zaloguj się do panelu administracyjnego jako dostawca.
@@ -38,7 +38,7 @@ Zasady wobec źródeł o innych warunkach (rekomendacja, nie opinia prawna):
 
 ## Konwerter: z dowolnego pliku do wzorca
 Dysponenci mają dane w różnych układach, więc portal ma konwerter (panel administracyjny, adres `/aed/konwerter/`, albo komenda `manage.py aed_convert`).
-1. Wgraj plik (csv, xlsx, xls, json/GeoJSON, także wynik zapytania Overpass z OpenStreetMap) i opcjonalnie wybierz profil źródła (`osm`).
+1. Wgraj plik (csv, xlsx, xls, json/GeoJSON, także wynik zapytania Overpass z OpenStreetMap) i opcjonalnie wybierz profil źródła (`osm`). Na górze strony jest przycisk pobrania wzorcowego pliku (xlsx).
 2. Konwerter dopasowuje kolumny: profil, nazwa lub synonim, podobieństwo nazw, a na końcu zawartość kolumny (zakresy współrzędnych, daty, układ PL-1992).
 3. Ujednolica wartości: współrzędne (przecinek, zapis stopniowy, WKT, PL-1992 → WGS84), „całą dobę" → `całodobowo`, „sprawny" → `czynny` itd.
 4. Pokazuje mapowanie z poziomem pewności, podgląd i raport każdego wiersza (ok, poprawiono, odrzucono wraz z powodem). Wynik i raport można pobrać jako CSV.
@@ -58,6 +58,7 @@ OSM ma licencję ODbL (share-alike): taki wykaz publikujemy osobno, nie mieszamy
   (np. w dużym budynku) nie są łączone, a różne numery budynków („Floriańska 1” i „Floriańska 10”) nigdy nie są uznane za to samo miejsce,
 - każdy rekord dostaje **Aktualność** i „Dni od ostatniej weryfikacji”: `nieczynny` (status), `nieaktualny` (weryfikacja starsza niż 2 lata),
   `do weryfikacji` (starsza niż rok, status „do weryfikacji” albo data z przyszłości), `aktualny` (czynny i zweryfikowany w ciągu roku),
+- po każdym scaleniu w tym samym zbiorze powstają też **raport scalania** (CSV: odrzucone wiersze z numerem wiersza i powodem, połączone duplikaty, pominięte zasoby, zmiany od poprzedniego scalenia) oraz ten sam wykaz w **GeoJSON**,
 - zasób zbiorczy jest **aktualizowany w miejscu**: ma stały identyfikator i adres, więc linki i zakładki nie psują się po każdym scaleniu
   (dane, schemat mapy i indeks wyszukiwarki odświeża portal tak jak przy ręcznej zmianie pliku w panelu),
 - zasoby wykazów AED można filtrować w API: `/1.4/resources?contains_aed_list=true` oraz `/1.4/search?contains_aed_list=true`.
@@ -88,7 +89,7 @@ Ograniczenie: w imporcie CKAN nie sprawdzamy jeszcze, czy instytucja ma już wyk
 Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
 - **Zakres zmian w portalu (założenie).** Nie mogliśmy potwierdzić z organizatorem, jak szeroko wolno rozszerzać kod portalu. Oparliśmy się na wskazówce mentora z czatu
   hackathonu, że trzeba „dostosować i przebudować logikę i metody w portalu”, aby wykazy można było pobierać i scalać w jedną standardową listę, oraz na jego zastrzeżeniu, że
-  nie wolno zmieniać zasad publikacji (za dane odpowiada dostawca, a nie portal). Zmiany w istniejącym kodzie są addytywne: 18 plików, +274 / −2 linie, **zero nowych zależności**,
+  nie wolno zmieniać zasad publikacji (za dane odpowiada dostawca, a nie portal). Zmiany w istniejącym kodzie są addytywne: 18 plików, +277 / -5 linii, **zero nowych zależności**,
   ten sam stos (Django, Celery, Elasticsearch, pandas i pyproj, które portal już ma). Nowy kod jest w module `mcod/aed`. Najbardziej „zewnętrzne” elementy to schemat XSD harvestera 1.14
   (opcjonalny element, starsze wersje działają bez zmian), poprawka frontu Leaflet (obejście błędu serwera deweloperskiego) i `host-gateway` w docker-compose (tylko środowisko lokalne).
 - **Brak geokodowania adresów w środowisku lokalnym.** Konwerter wymaga współrzędnych i nie zgaduje ich z adresu. Portal dane.gov.pl ma własny geokoder i potrafi wyliczyć punkty
@@ -102,9 +103,13 @@ Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
 - **PL-1992:** kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest przełącznik).
 - **Import CKAN** nie sprawdza, czy instytucja ma już wykaz AED dodany inną drogą (XML sprawdza). Walidatory XML i CKAN sprawdzone na przykładowych danych, nie na pełnym imporcie harvestera.
 - **Harmonogram** codziennego scalania jest w kodzie (Celery beat), ale lokalnie nie jest uruchomiony. Scalanie uruchamialiśmy ręcznie komendą `aed_build_main`.
-- **Dostępność i telefon.** Strona konwertera przeszła kontrole statyczne (etykiety pól, opisy i nagłówki tabel, unikalne identyfikatory, kontrast kolorów AA, najniższy 4,92). Szablon panelu administracyjnego portalu nie ma jednak meta viewport i nie jest responsywny
-  (dodaliśmy viewport tylko do naszej strony). Wyglądu na prawdziwym telefonie nie sprawdzaliśmy.
-- **Nie zweryfikowane:** pełny przebieg istniejących testów portalu (sprawdzone wybrane, patrz wyniki w opisie projektu) oraz walidatory XML i CKAN na pełnym imporcie harvestera.
+- **Dostępność i telefon.** Strona konwertera przeszła kontrole statyczne (etykiety pól, opisy i nagłówki tabel, unikalne identyfikatory, kontrast kolorów AA, najniższy 4,92). Powłoka panelu
+  administracyjnego portalu ma sztywne body 960 px i nie jest responsywna, więc **na naszej stronie** zwalniamy szerokość i układamy menu pod treścią na wąskich ekranach. Sprawdzone w emulacji
+  telefonu (375 px), tabletu (768 px) i desktopu na statycznej kopii strony z prawdziwymi stylami panelu: brak poziomego przewijania, tabele przewijają się w kontenerach. Pozostałe strony panelu
+  (m.in. formularz zasobu z naszym polem) zostają takie, jakie są w portalu. Prawdziwego telefonu i działającego panelu (certyfikat) nie sprawdzaliśmy.
+- **Testy.** Nasze: 145 testów logiki AED i 6 testów walidacji zdalnego wykazu. Istniejące testy portalu uruchomiliśmy w wybranych grupach: harvester (schematy, serializery, CKAN, XML) bez porażek po
+  jednej poprawce wzorca, zasoby, formularz, modele, DGA, indeksowanie i wyszukiwarka (139 testów) oraz komponent API (216 testów), wszystkie zielone. **Nie uruchamialiśmy pełnego zestawu** (m.in. CMS, raporty,
+  użytkownicy) ani pełnego importu XML i CKAN. `makemigrations --check` zgłasza migrację w aplikacji `users` (`last_logged_method`), niezwiązaną z naszymi zmianami.
 
 ## Dane demonstracyjne
 Pliki w `backend/mcod/aed/demo_data/` (generator: `aed-demo/generate_demo.py`) są **syntetyczne** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawierają celowe błędy, żeby pokazać walidację

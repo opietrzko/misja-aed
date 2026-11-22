@@ -7,7 +7,7 @@ Hasło akcji na logo: **„Przez dane do serca”**.
 Dane o defibrylatorach AED są rozproszone, niepełne i niczyje. Rozszerzamy kod portalu dane.gov.pl o nowy typ zasobu, **wykaz AED**
 (wzorowany na istniejącym wykazie DGA): każdy dysponent publikuje własny wykaz w jednolitym układzie kolumn i **sam odpowiada za jego jakość**,
 a portal codziennie **scala wykazy wszystkich dostawców w jeden ogólnopolski zbiór** (CSV i GeoJSON, licencja CC BY 4.0)
-z kolumnami: dysponent, zakres referencyjny źródła, aktualność, wiarygodność, dane zmian. Do tego konwerter, który zamienia
+z kolumnami: dysponent, zakres referencyjny źródła, aktualność, wiarygodność, raport zmian. Do tego konwerter, który zamienia
 dowolny plik dysponenta (inne nazwy kolumn, współrzędne w PL-1992, OpenStreetMap) na wzorcowy układ.
 
 **Dla jury zacznij od [`JURY.md`](JURY.md)**: instrukcja krok po kroku, gdzie sprawdzić każde wymaganie z treści zadania.
@@ -36,8 +36,9 @@ Pełna instrukcja: [`backend/README.md`](backend/README.md) i [`frontend/README.
 - dane demo i scalenie uruchamiaj przez `docker exec mcod-admin python manage.py aed_seed_demo` i `aed_build_main` (nie przez `run`, bo pliki muszą trafić do wspólnego katalogu `media` z Celery);
 - obrazy są amd64, więc na Macu z procesorem ARM działają w emulacji i potrzebują sporo pamięci (kilka GB dla Dockera).
 
-Testy logiki AED (bez Dockera, w venv z `pandas pytest openpyxl pyproj`), z katalogu `backend/`:
-`PYTHONPATH=. python -m pytest mcod/aed/tests -c /dev/null --confcutdir=mcod/aed/tests --rootdir=. --ignore=mcod/aed/tests/test_remote_check.py -q`
+Testy logiki AED (bez Dockera), z katalogu `backend/`:
+`python3 -m venv .venv && .venv/bin/pip install pandas pytest openpyxl pyproj`
+`PYTHONPATH=. .venv/bin/python -m pytest mcod/aed/tests -c /dev/null --confcutdir=mcod/aed/tests --rootdir=. --ignore=mcod/aed/tests/test_remote_check.py -q`
 
 ## Wykorzystanie sztucznej inteligencji
 Zgodnie z regulaminem zadania (§2 ust. 7-8) wskazujemy zakres użycia AI:

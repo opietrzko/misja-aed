@@ -10,7 +10,7 @@ ______________________________________________________________________
 - Dodano pole zasobu `contains_aed_list` (migracja `resources.0076`) wraz z walidacją pliku w formularzu zasobu (format csv/xls/xlsx, nazwy i kolejność kolumn, jeden wykaz AED na instytucję)
 - Dodano model `AggregatedAEDInfo` i zadanie Celery `create_main_aed_resource_task` (codziennie o 3:45), które scala wykazy AED w zasób zbiorczy aktualizowany w miejscu, wylicza aktualność rekordów, wskazuje pozostałych dysponentów punktu i tworzy raport scalania oraz wersję GeoJSON
 - Dodano automatyczne mapowanie współrzędnych na mapę portalu dla zasobów z flagą wykazu AED
-- Dodano konwerter plików do wzorca AED (reguły, bez AI): komenda `aed_convert` oraz strona `/aed/konwerter/` w panelu administracyjnym z pobieraniem wzorca xlsx
+- Dodano konwerter plików do wzorca AED (reguły, bez AI): komenda `aed_convert` oraz strona `/aed/konwerter/` w panelu administracyjnym z pobieraniem wzorca xlsx, responsywna na telefonie i tablecie
 - Dodano algorytmy jakości danych wykazu AED (jawne reguły, bez AI): wiarygodność rekordu 0-100, flagi anomalii, parser godzin dostępności do jednolitego zapisu, normalizacja i rozbijanie adresów, deduplikacja z podobieństwem adresu i pewnością połączenia oraz wykrywanie zmian między scaleniami w raporcie
 - Dodano komendy `aed_build_main`, `aed_make_template` i `aed_seed_demo`
 - Dodano pole `contains_aed_list` w API zasobów (`/resources`, `/search`) oraz filtr o tej nazwie
@@ -20,6 +20,7 @@ ______________________________________________________________________
 
 - Zbiór zbiorczy wykazu AED jest udostępniany na licencji CC BY 4.0
 - Docker: `host.docker.internal` mapowany na `host-gateway` (działa także na macOS)
+- Testy: wzorzec `harvester_xml_expected_data` zawiera nowe pole `contains_aed_list`
 
 ### Fixes
 
