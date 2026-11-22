@@ -1,6 +1,6 @@
 # Misja AED - instrukcja dla jury
 
-> Wersja robocza: adresy i konta uzupełnimy po wdrożeniu publicznym prototypu.
+> **Prototyp online: [aed.haloware.pl](https://aed.haloware.pl).** Uruchomienie lokalne krok po kroku: [`README.md`](README.md#pierwsze-kroki).
 
 ## Idea w jednym zdaniu
 Portal dane.gov.pl dostaje **wykaz AED** - nowy typ zasobu (wzorowany na wykazie DGA): każdy dysponent publikuje
@@ -19,6 +19,9 @@ Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pli
 | 4 | Format odczytywalny maszynowo | zasób zbiorczy w CSV i w GeoJSON, raport scalania w CSV; źródła csv/xls/xlsx |
 | 5 | Zgodność z zasadami portalu | rozszerzenie istniejących mechanizmów portalu: flaga zasobu, walidacja w formularzu, zadanie Celery - patrz `backend/mcod/aed/` |
 | 6 | Kod źródłowy | nowy moduł `backend/mcod/aed/`; zmiany w istniejących plikach: `resources` (forms, admin, models, migracja 0076, API i indeks), `harvester`, `search`, `settings`, `celeryapp`; pełna lista w `backend/CHANGELOG.md` |
+| 7 | Nazwa akcji, hasło i logotyp | nazwa „Przez dane do serca”, hasło „Zdążysz, jeśli wiesz gdzie.”; logotyp w JPG, PNG, PDF i SVG w `identyfikacja-wizualna/` |
+| 8 | Księga znaku (PDF) | `identyfikacja-wizualna/ksiega-znaku.pdf`: koncepcja (4 zdania), kolorystyka, pole ochronne, minimalna wielkość, niedozwolone użycia, typografia, wersje znaku, zastosowania |
+| 9 | Zachęcenie dysponentów do dzielenia się danymi | `identyfikacja-wizualna/materialy/`: plakat A3, naklejka „Ten AED jest w bazie” z kodem QR, baner dla dane.gov.pl, post; komunikaty do dysponentów w księdze znaku |
 
 ## Kroki dla dostawcy danych (panel administracyjny)
 1. Zaloguj się do panelu administracyjnego jako dostawca.
@@ -26,6 +29,14 @@ Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pli
 3. Zaznacz „Wykaz defibrylatorów AED: Tak” i zapisz. Przy błędnych kolumnach formularz wskaże oczekiwane nazwy i kolejność.
 4. Po zapisie wykaz trafia do wykazu zbiorczego przy najbliższym przebiegu zadania (codziennie) albo od razu po
    uruchomieniu komendy `python manage.py aed_build_main`.
+
+## Jak korzystać z danych (ratownik, urzędnik, każdy)
+Użytkownikiem zbioru są służby ratownicze, ale także każdy, kto szuka najbliższego AED lub chce użyć danych we własnej aplikacji.
+1. Na stronie portalu wyszukaj zbiór „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy” i otwórz go.
+2. W zasobie zbiorczym zobacz tabelę (kolumny **Aktualność** i **Wiarygodność** mówią, czy punktowi można ufać) albo zakładkę **Mapa** z punktami AED.
+3. Sprawdź warunki użycia: licencja CC BY 4.0 (sekcja „Warunki wykorzystywania”).
+4. Pobierz dane maszynowo: **CSV** lub **GeoJSON** (trzeci zasób w zbiorze), albo użyj API: `/1.4/resources?contains_aed_list=true` (lista wykazów) i `/1.4/resources/<id>/geo` (punkty mapy).
+5. Zobacz, kto jest dysponentem punktu i jaki jest zakres referencyjny źródła (kolumny „Nazwa dysponenta zasobu” i „Zakres referencyjny źródła”). Raport z ostatniego scalenia pokazuje odrzucone wiersze i zmiany.
 
 ## Licencja
 Zbiór zbiorczy jest udostępniany na **CC BY 4.0** (uznanie autorstwa): wolna i otwarta, pozwala na użycie komercyjne i przetwarzanie, a nazwa dysponenta
@@ -86,6 +97,11 @@ Wykaz AED nie wymaga ręcznego klikania w panelu. Instytucja, która zasila port
   wzorcowe kolumny, brak jednoczesnej flagi DGA, co najwyżej jeden wykaz w pliku i brak innego wykazu instytucji dodanego inną drogą.
 - **CKAN:** pole zasobu `contains_aed_list`. Import częściowy odrzuca zbiór z błędnym wykazem i opisuje powód w szczegółach importu w panelu.
 Ograniczenie: w imporcie CKAN nie sprawdzamy jeszcze, czy instytucja ma już wykaz dodany inną drogą (w XML sprawdzamy).
+
+## Zasady UX
+Dla dostawcy danych droga od pliku do wykazu jest krótka i przewidywalna: wzorcowy plik xlsx pobiera się jednym przyciskiem na górze strony konwertera, a formularz zasobu przy błędnych kolumnach wskazuje oczekiwane nazwy i kolejność.
+Konwerter pokazuje mapowanie kolumn z poziomem pewności, podgląd wyniku i raport każdego wiersza z powodem odrzucenia, a pola formularza mają etykiety i podpowiedzi (np. jaką datę podać). Niczego nie zgaduje, zamiast tego jasno mówi, co trzeba uzupełnić.
+Użytkownik końcowy dostaje dane w tabeli, na mapie i w formatach maszynowych, z oceną aktualności i wiarygodności przy każdym punkcie. Dostępności i responsywności dotyczy punkt „Dostępność i telefon” w ograniczeniach poniżej.
 
 ## Ograniczenia
 Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
