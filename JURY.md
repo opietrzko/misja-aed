@@ -52,14 +52,30 @@ OSM ma licencję ODbL (share-alike): taki wykaz publikujemy osobno, nie mieszamy
 
 ## Co dzieje się podczas scalania
 - odrzucane są pojedyncze błędne wiersze (współrzędne poza Polską, niedozwolone wartości słownikowe, zła data), a nie cały wykaz,
-- duplikaty (ten sam AED u **różnych** dysponentów, odległość ≤ 25 m) są łączone, a w zbiorczym zostaje rekord ze statusem „czynny” i najświeższą weryfikacją.
-  Kolumna „Liczba źródeł” pokazuje, ile wykazów go zgłosiło, a „Pozostali dysponenci” wymienia pozostałych w formie „Dysponent (identyfikator)”.
-  Dwa urządzenia **jednego** dysponenta blisko siebie (np. w dużym budynku) nie są łączone,
+- duplikaty (ten sam AED u **różnych** dysponentów) są łączone: zawsze do 10 m, a do 50 m tylko przy podobnym adresie. Zostaje rekord ze statusem „czynny”,
+  najświeższą weryfikacją i najpełniejszym opisem. Kolumna „Liczba źródeł” pokazuje, ile wykazów go zgłosiło, „Pozostali dysponenci” wymienia pozostałych
+  („Dysponent (identyfikator)”), a „Pewność połączenia” (np. „99%”, „nie dotyczy” bez połączeń) wynika z odległości i podobieństwa adresu. Dwa urządzenia **jednego** dysponenta blisko siebie
+  (np. w dużym budynku) nie są łączone, a różne numery budynków („Floriańska 1” i „Floriańska 10”) nigdy nie są uznane za to samo miejsce,
 - każdy rekord dostaje **Aktualność** i „Dni od ostatniej weryfikacji”: `nieczynny` (status), `nieaktualny` (weryfikacja starsza niż 2 lata),
   `do weryfikacji` (starsza niż rok, status „do weryfikacji” albo data z przyszłości), `aktualny` (czynny i zweryfikowany w ciągu roku),
 - zasób zbiorczy jest **aktualizowany w miejscu**: ma stały identyfikator i adres, więc linki i zakładki nie psują się po każdym scaleniu
   (dane, schemat mapy i indeks wyszukiwarki odświeża portal tak jak przy ręcznej zmianie pliku w panelu),
 - zasoby wykazów AED można filtrować w API: `/1.4/resources?contains_aed_list=true` oraz `/1.4/search?contains_aed_list=true`.
+
+## Algorytmy (jawne reguły, bez AI)
+Wszystko deterministyczne, na pandas i bibliotece standardowej, bez nowych zależności. **Progi i wagi poniżej to nasze założenia do dostrojenia, nie wiedza ekspercka.**
+- **Wiarygodność rekordu (0-100)** = kompletność opisu (do 30) + aktualność weryfikacji (do 30; „do weryfikacji” w połowie) + potwierdzenie przez innych dysponentów
+  (2 źródła = 15, 3 i więcej = 20) + dokładność współrzędnych (5 miejsc po przecinku = 10, 4 = 7, 3 = 3) + godziny w zapisie maszynowym (10),
+  minus 10 za każdą flagę anomalii. Urządzenie „nieczynne” dostaje najwyżej 20. Kolumny „Wiarygodność” i „Uwagi do danych”.
+- **Flagi anomalii:** niska precyzja współrzędnych (≤ 3 miejsca po przecinku to ok. 100 m i gorzej), co najmniej 3 rekordy jednego dysponenta w identycznym punkcie
+  (podejrzany „środek miasta”), data weryfikacji z przyszłości, nierozpoznane godziny.
+- **Parser godzin:** z „pn–pt 7:30–16:00”, „Mo-Fr 08:00-18:00”, „godz: 8.00-18.00 w dni robocze”, „od 8 do 16 codziennie”, „pn-pt 7-17, sob 9-13” robi jednolity
+  zapis (`Mo-Fr 07:30-16:00; Sa 09:00-13:00`, `24/7`). Nie zgaduje: godziny bez dni, niepoprawne albo nakładające się przedziały zostają nierozpoznane (kolumna
+  „Godziny (znormalizowane)” pusta i flaga w uwagach).
+- **Adresy:** „ulica Paradna 36, 93-345 Łódź” → „ul. Paradna 36”, miejscowość „Łódź” (gdy nie podano jej osobno), kod „93-345” w osobnej kolumnie. Konwerter uzupełnia
+  miejscowość z adresu. Kod pocztowy bez myślnika nie jest rozpoznawany (łatwo go pomylić z numerem budynku).
+- **Wykrywanie zmian między scaleniami** w raporcie: nowe, usunięte i zmienione rekordy (status, dostępność, sposób dostępu, data weryfikacji, współrzędne) z opisem
+  „przed → po”, po kluczu (dysponent, identyfikator).
 
 ## Dostawcy publikujący przez harvester (XML i CKAN)
 Wykaz AED nie wymaga ręcznego klikania w panelu. Instytucja, która zasila portal harvesterem, oznacza zasób flagą i dostaje tę samą walidację co w formularzu:
@@ -76,8 +92,8 @@ Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
   albo geokoder portalu. Zewnętrzne geokodowanie (np. z OpenStreetMap) odrzuciliśmy ze względu na licencję (ODbL, share-alike, niezgodna ze zbiorem na CC BY).
 - **Dane demonstracyjne są syntetyczne** (fikcyjni dysponenci). Konwerter nie był testowany na szerokim zestawie prawdziwych plików, poza jednym wykazem z Łodzi.
 - **Licencje źródeł.** OpenStreetMap (ODbL) publikujemy osobno, a nie w zbiorze zbiorczym. Dane PRG (GUGiK) są „bezpłatne i do dowolnego wykorzystania" z podaniem źródła, ale bez nazwanej licencji. To rekomendacje, a nie opinia prawna.
-- **Deduplikacja jest heurystyką** (punkty różnych dysponentów bliżej niż 25 m). Gdy dysponent ma dwa urządzenia blisko jednego cudzego, oba mogą zostać do niego dołączone.
-- **Aktualność:** progi 12 i 24 miesięcy to nasza propozycja, nie wymóg.
+- **Deduplikacja jest heurystyką** (odległość do 10 m, do 50 m przy podobnym adresie). Gdy dysponent ma dwa urządzenia blisko jednego cudzego, oba mogą zostać do niego dołączone.
+- **Aktualność, wiarygodność i dedup:** progi 12 i 24 miesięcy, wagi wiarygodności oraz promienie 10 i 50 m to nasze propozycje, nie wymóg.
 - **PL-1992:** kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest przełącznik).
 - **Import CKAN** nie sprawdza, czy instytucja ma już wykaz AED dodany inną drogą (XML sprawdza). Walidatory XML i CKAN sprawdzone na przykładowych danych, nie na pełnym imporcie harvestera.
 - **Harmonogram** codziennego scalania jest w kodzie (Celery beat), ale lokalnie nie jest uruchomiony. Scalanie uruchamialiśmy ręcznie komendą `aed_build_main`.

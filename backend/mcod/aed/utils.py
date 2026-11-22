@@ -17,22 +17,35 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
+from mcod.aed.changes import diff_main
 from mcod.aed.constants import (
     AED_COLUMNS,
+    COL_AVAILABILITY,
+    COL_CITY,
     COL_DAYS_SINCE,
     COL_FRESHNESS,
+    COL_HOURS,
+    COL_HOURS_NORM,
     COL_ID,
     COL_LAT,
+    COL_LOCATION,
     COL_LON,
+    COL_MERGE_CONF,
+    COL_NOTES,
     COL_OTHER_PROVIDERS,
+    COL_POSTAL,
     COL_PROVIDER,
     COL_SCOPE,
     COL_SOURCE_DATE,
     COL_SOURCE_RESOURCE,
     COL_SOURCES_COUNT,
     COL_STATUS,
+    COL_STREET,
+    COL_TRUST,
     COL_VERIFIED,
-    DEDUP_DISTANCE_METERS,
+    DEDUP_CERTAIN_METERS,
+    DEDUP_MAX_METERS,
+    DEDUP_TEXT_MIN,
     ENUM_COLUMNS,
     FRESH_DAYS,
     FRESHNESS_ACTUAL,
@@ -41,15 +54,22 @@ from mcod.aed.constants import (
     FRESHNESS_TO_VERIFY,
     MAIN_AED_COLUMNS,
     MAIN_AED_REQUIRED_SOURCE_COLUMNS,
+    MERGE_CONF_NONE,
     POLAND_LAT_RANGE,
     POLAND_LON_RANGE,
+    REPORT_CHANGED,
     REPORT_COLUMNS,
     REPORT_MERGED,
+    REPORT_NEW,
     REPORT_OK,
     REPORT_REJECTED,
+    REPORT_REMOVED,
     REPORT_SKIPPED,
     STALE_DAYS,
 )
+from mcod.aed.hours import normalize_hours
+from mcod.aed.quality import OPTIONAL_FIELDS, anomalies, merge_confidence, trust_score
+from mcod.aed.text import normalize_address, text_similarity
 
 logger = logging.getLogger("mcod")
 
@@ -179,29 +199,70 @@ _STATUS_RANK = {"czynny": 0, "do weryfikacji": 1, "nieczynny": 2}
 
 
 _UNKNOWN_PROVIDER = "inne źródło"
-_GRID_CELL = 0.001  # ok. 110 m: siatka do szybkiego wyszukiwania sąsiadów
+_GRID_CELL = 0.001  # ok. 110 m: siatka do szybkiego wyszukiwania sąsiadów (promień szukania to maks. 50 m)
+
+
+def _is_blank(value: Any) -> bool:
+    if value is None:
+        return True
+    try:
+        if pd.isna(value):
+            return True
+    except (TypeError, ValueError):
+        pass
+    return str(value).strip() == ""
 
 
 def _provider_of(df: pd.DataFrame, i: int) -> str:
     return df.at[i, COL_PROVIDER] if COL_PROVIDER in df.columns else _UNKNOWN_PROVIDER
 
 
-def _find_duplicate(df: pd.DataFrame, grid: Dict[Tuple[int, int], List[int]], i: int, distance_m: float) -> Optional[int]:
-    """Indeks wcześniej zachowanego rekordu innego dysponenta w promieniu ``distance_m`` albo None."""
-    lat, lon = df.at[i, COL_LAT], df.at[i, COL_LON]
+def _place_similarity(df: pd.DataFrame, i: int, j: int) -> Optional[float]:
+    """Podobieństwo miejsca dwóch rekordów (None, gdy nie ma czego porównać).
+
+    Gdy oba rekordy mają adres, decyduje adres: różne budynki z identycznym ogólnikiem w opisie („hol”) to nie to samo
+    miejsce. Opis lokalizacji jest używany tylko wtedy, gdy któryś rekord nie ma adresu.
+    """
+    street = text_similarity(df.at[i, COL_STREET], df.at[j, COL_STREET]) if COL_STREET in df.columns else None
+    if street is not None:
+        return street
+    return text_similarity(df.at[i, COL_LOCATION], df.at[j, COL_LOCATION]) if COL_LOCATION in df.columns else None
+
+
+def _neighbors(grid: Dict[Tuple[int, int], List[int]], lat: float, lon: float):
     cx, cy = int(lat / _GRID_CELL), int(lon / _GRID_CELL)
-    same_provider_check = COL_PROVIDER in df.columns
     for dx in (-1, 0, 1):
         for dy in (-1, 0, 1):
-            for j in grid.get((cx + dx, cy + dy), []):
-                if same_provider_check and df.at[j, COL_PROVIDER] == df.at[i, COL_PROVIDER]:
-                    continue
-                if haversine_m(lat, lon, df.at[j, COL_LAT], df.at[j, COL_LON]) <= distance_m:
-                    return j
-    return None
+            yield from grid.get((cx + dx, cy + dy), [])
 
 
-def _merge_log_entry(df: pd.DataFrame, merged_index: int, winner_index: int) -> Dict[str, Any]:
+def _match(df: pd.DataFrame, i: int, j: int, certain_m: float, max_m: float) -> Optional[Tuple[float, int]]:
+    """(odległość, pewność) gdy rekordy i, j to to samo urządzenie, inaczej None.
+
+    Do ``certain_m`` łączymy zawsze; do ``max_m`` tylko gdy opisy miejsca są podobne.
+    """
+    distance = haversine_m(df.at[i, COL_LAT], df.at[i, COL_LON], df.at[j, COL_LAT], df.at[j, COL_LON])
+    if distance > max_m:
+        return None
+    similarity = _place_similarity(df, i, j)
+    if distance > certain_m and (similarity is None or similarity < DEDUP_TEXT_MIN):
+        return None
+    return distance, merge_confidence(distance, similarity, max_m)
+
+
+def _find_duplicate(df, grid, i: int, certain_m: float, max_m: float) -> Optional[Tuple[int, float, int]]:
+    """Najpewniejszy wcześniej zachowany rekord INNEGO dysponenta: (indeks, odległość, pewność) albo None."""
+    best = None
+    for j in _neighbors(grid, df.at[i, COL_LAT], df.at[i, COL_LON]):
+        if COL_PROVIDER in df.columns and df.at[j, COL_PROVIDER] == df.at[i, COL_PROVIDER]:
+            continue
+        found = _match(df, i, j, certain_m, max_m)
+        if found and (best is None or (found[1], -found[0]) > (best[2], -best[1])):
+            best = (j, found[0], found[1])
+    return best
+
+
+def _merge_log_entry(df: pd.DataFrame, merged_index: int, winner_index: int, distance: float, confidence: int) -> Dict[str, Any]:
     return {
         "provider": _provider_of(df, merged_index),
         "resource": df.at[merged_index, COL_SOURCE_RESOURCE] if COL_SOURCE_RESOURCE in df.columns else None,
@@ -209,52 +270,64 @@ def _merge_log_entry(df: pd.DataFrame, merged_index: int, winner_index: int) -> 
         "id": df.at[merged_index, COL_ID],
         "winner_provider": _provider_of(df, winner_index),
         "winner_id": df.at[winner_index, COL_ID],
+        "distance": distance,
+        "confidence": confidence,
     }
 
 
-def deduplicate(
-    df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS, merge_log: Optional[List[Dict[str, Any]]] = None
-) -> pd.DataFrame:
-    """Usuwa duplikaty - ten sam AED zgłoszony przez kilku dysponentów.
+def _filled_optional_fields(row: pd.Series) -> int:
+    return sum(1 for f in OPTIONAL_FIELDS if f in row.index and not _is_blank(row[f]))
 
-    Z grupy punktów leżących bliżej niż ``distance_m`` zostaje rekord najlepszy:
-    status „czynny”, potem najświeższa weryfikacja. Łączymy tylko punkty RÓŻNYCH dysponentów
-    (dwa urządzenia jednego dysponenta blisko siebie to dwa urządzenia, np. w dużym budynku).
-    Dopisuje „Liczba źródeł” oraz „Pozostali dysponenci” w postaci „Dysponent (identyfikator); …”.
+
+def deduplicate(
+    df: pd.DataFrame,
+    certain_m: float = DEDUP_CERTAIN_METERS,
+    max_m: float = DEDUP_MAX_METERS,
+    merge_log: Optional[List[Dict[str, Any]]] = None,
+) -> pd.DataFrame:
+    """Usuwa duplikaty: to samo urządzenie zgłoszone przez kilku dysponentów.
+
+    Rekordy różnych dysponentów łączymy, gdy leżą bliżej niż ``certain_m`` albo (do ``max_m``) mają podobny adres
+    lub opis miejsca; różne numery budynków nigdy nie są „podobne”. Z grupy zostaje rekord najlepszy: status „czynny”,
+    najświeższa weryfikacja, najpełniejszy opis. Dwa urządzenia jednego dysponenta to dwa urządzenia.
+    Dopisuje „Liczba źródeł”, „Pozostali dysponenci” i „Pewność połączenia” (najniższa z połączeń).
     """
     df = df.copy()
     if df.empty:
         df[COL_SOURCES_COUNT] = pd.Series(dtype=int)
         df[COL_OTHER_PROVIDERS] = pd.Series(dtype=object)
+        df[COL_MERGE_CONF] = pd.Series(dtype=object)
         return df
 
     df["_rank"] = df[COL_STATUS].map(_STATUS_RANK).fillna(3)
     df["_ver"] = df[COL_VERIFIED].map(lambda d: d.toordinal() if d else 0)
-    df = df.sort_values(["_rank", "_ver"], ascending=[True, False]).reset_index(drop=True)
+    df["_cmp"] = df.apply(_filled_optional_fields, axis=1)
+    df = df.sort_values(["_rank", "_ver", "_cmp"], ascending=[True, False, False]).reset_index(drop=True)
 
     grid: Dict[Tuple[int, int], List[int]] = {}
-    merged: Dict[int, List[int]] = {}  # indeks zachowanego rekordu -> indeksy dołączonych duplikatów
+    merged: Dict[int, List[Tuple[int, float, int]]] = {}  # zachowany rekord -> [(dołączony, odległość, pewność)]
     for i in df.index:
-        winner = _find_duplicate(df, grid, i, distance_m)
+        winner = _find_duplicate(df, grid, i, certain_m, max_m)
         if winner is None:
-            cell = (int(df.at[i, COL_LAT] / _GRID_CELL), int(df.at[i, COL_LON] / _GRID_CELL))
-            grid.setdefault(cell, []).append(i)
+            grid.setdefault((int(df.at[i, COL_LAT] / _GRID_CELL), int(df.at[i, COL_LON] / _GRID_CELL)), []).append(i)
             merged[i] = []
         else:
-            merged[winner].append(i)
+            merged[winner[0]].append((i, winner[1], winner[2]))
 
     if merge_log is not None:
-        merge_log.extend(_merge_log_entry(df, j, i) for i, members in merged.items() for j in members)
+        merge_log.extend(_merge_log_entry(df, j, i, d, c) for i, members in merged.items() for j, d, c in members)
 
     def others(i: int) -> Optional[str]:
-        parts = [f"{_provider_of(df, j)} ({df.at[j, COL_ID]})" for j in merged[i]]
+        parts = [f"{_provider_of(df, j)} ({df.at[j, COL_ID]})" for j, _, _ in merged[i]]
         return "; ".join(parts) if parts else None
 
     kept = list(merged)
     result = df.loc[kept].copy()
     result[COL_SOURCES_COUNT] = [1 + len(merged[i]) for i in kept]
     result[COL_OTHER_PROVIDERS] = [others(i) for i in kept]
-    return result.drop(columns=["_rank", "_ver"])
+    lowest = [min((c for _, _, c in merged[i]), default=None) for i in kept]
+    result[COL_MERGE_CONF] = [f"{c}%" if c is not None else MERGE_CONF_NONE for c in lowest]
+    return result.drop(columns=["_rank", "_ver", "_cmp"])
 
 
 def compute_freshness(
@@ -295,15 +368,20 @@ def build_report_df(report: List[Dict[str, Any]]) -> pd.DataFrame:
     return df
 
 
-def build_main_df(
-    sources: List[Tuple[pd.DataFrame, Dict[str, Any]]],
-    today: Optional[datetime.date] = None,
-    report: Optional[List[Dict[str, Any]]] = None,
-) -> pd.DataFrame:
-    """Scala wykazy dostawców w jeden zbiorczy wykaz.
+def enrich_source_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Ujednolica adresy i godziny wykazu jednego dysponenta (przed scaleniem)."""
+    df = df.copy()
+    addresses = [normalize_address(street, city) for street, city in zip(df[COL_STREET], df[COL_CITY])]
+    df[COL_STREET] = [a.street for a in addresses]
+    df[COL_CITY] = [a.city for a in addresses]
+    df[COL_POSTAL] = [a.postal for a in addresses]
+    hours = [normalize_hours(h, avail) for h, avail in zip(df[COL_HOURS], df[COL_AVAILABILITY])]
+    df[COL_HOURS_NORM] = hours
+    df["_hours_unparsed"] = [h is None and not _is_blank(raw) for h, raw in zip(hours, df[COL_HOURS])]
+    return df
 
-    ``sources`` - lista par (DataFrame wykazu, metadane: provider, scope, resource_id, data_date).
-    """
+
+def _collect_frames(sources, report: Optional[List[Dict[str, Any]]]) -> List[pd.DataFrame]:
     frames = []
     for df, meta in sources:
         clean, rejected = sanitize_source_df(df)
@@ -317,29 +395,62 @@ def build_main_df(
                 )
         if clean.empty:
             continue
+        clean = enrich_source_df(clean)
         clean[COL_PROVIDER] = meta["provider"]
         clean[COL_SCOPE] = meta["scope"]
         clean[COL_SOURCE_RESOURCE] = meta["resource_id"]
         clean[COL_SOURCE_DATE] = meta.get("data_date")
         frames.append(clean)
+    return frames
 
+
+def _apply_quality(df: pd.DataFrame) -> None:
+    """Dopisuje „Uwagi do danych” (flagi anomalii) i „Wiarygodność” (0-100)."""
+    notes_column, trust_column = [], []
+    for _, row in df.iterrows():
+        notes = anomalies(row, int(row["_same_point"]), bool(row["_hours_unparsed"]))
+        notes_column.append("; ".join(notes) or None)
+        trust_column.append(trust_score(row, len(notes)))
+    df[COL_NOTES] = notes_column
+    df[COL_TRUST] = pd.array(trust_column, dtype="Int64")
+
+
+def _merge_report_rows(merge_log: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows = []
+    for m in merge_log:
+        reason = (
+            f"ten sam punkt co {m['winner_id']} ({m['winner_provider']}): odległość {m['distance']:.0f} m, "
+            f"pewność {m['confidence']}%; w wykazie zbiorczym zostaje tamten rekord"
+        )
+        rows.append(_report_row(m["provider"], m["resource"], m["row"], m["id"], REPORT_MERGED, reason))
+    return rows
+
+
+def build_main_df(
+    sources: List[Tuple[pd.DataFrame, Dict[str, Any]]],
+    today: Optional[datetime.date] = None,
+    report: Optional[List[Dict[str, Any]]] = None,
+) -> pd.DataFrame:
+    """Scala wykazy dostawców w jeden zbiorczy wykaz.
+
+    ``sources`` - lista par (DataFrame wykazu, metadane: provider, scope, resource_id, data_date).
+    Kolejność: walidacja wierszy, ujednolicenie adresów i godzin, deduplikacja, aktualność, wiarygodność.
+    """
+    frames = _collect_frames(sources, report)
     if not frames:
-        main_df = pd.DataFrame(columns=MAIN_AED_COLUMNS)
-    else:
-        merge_log: List[Dict[str, Any]] = []
-        main_df = deduplicate(pd.concat(frames, ignore_index=True), merge_log=merge_log)
-        if report is not None:
-            for m in merge_log:
-                reason = (
-                    f"ten sam punkt (≤ {DEDUP_DISTANCE_METERS} m) co {m['winner_id']} ({m['winner_provider']}); "
-                    "w wykazie zbiorczym zostaje tamten rekord"
-                )
-                report.append(_report_row(m["provider"], m["resource"], m["row"], m["id"], REPORT_MERGED, reason))
-        main_df = main_df.sort_values([COL_PROVIDER, COL_ID]).reset_index(drop=True)
-        main_df["Lp."] = range(1, len(main_df) + 1)
-        fresh = [compute_freshness(v, st, today) for v, st in zip(main_df[COL_VERIFIED], main_df[COL_STATUS])]
-        main_df[COL_FRESHNESS] = [f[0] for f in fresh]
-        main_df[COL_DAYS_SINCE] = pd.array([f[1] for f in fresh], dtype="Int64")
+        return pd.DataFrame(columns=MAIN_AED_COLUMNS)
+    combined = pd.concat(frames, ignore_index=True)
+    combined["_same_point"] = combined.groupby([COL_PROVIDER, COL_LAT, COL_LON])[COL_ID].transform("count")
+    merge_log: List[Dict[str, Any]] = []
+    main_df = deduplicate(combined, merge_log=merge_log)
+    if report is not None:
+        report.extend(_merge_report_rows(merge_log))
+    main_df = main_df.sort_values([COL_PROVIDER, COL_ID]).reset_index(drop=True)
+    main_df["Lp."] = range(1, len(main_df) + 1)
+    fresh = [compute_freshness(v, st, today) for v, st in zip(main_df[COL_VERIFIED], main_df[COL_STATUS])]
+    main_df[COL_FRESHNESS] = [f[0] for f in fresh]
+    main_df[COL_DAYS_SINCE] = pd.array([f[1] for f in fresh], dtype="Int64")
+    _apply_quality(main_df)
     return main_df.reindex(columns=MAIN_AED_COLUMNS)
 
 
@@ -560,6 +671,18 @@ class AEDBuild:
     csv_path: Path
 
 
+def read_previous_main_df() -> Optional[pd.DataFrame]:
+    """Poprzedni wykaz zbiorczy (plik obecnego zasobu), do wykrywania zmian. None przy pierwszym scaleniu."""
+    resource = get_main_aed_resource()
+    if resource is None or not resource.main_file:
+        return None
+    try:
+        return pd.read_csv(resource.main_file.path)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Cannot read previous main AED file: %s", exc)
+        return None
+
+
 def build_main_aed(directory: Optional[Path] = None) -> AEDBuild:
     """Scala wykazy dostawców: zwraca tabelę zbiorczą, raport uwag i ścieżkę pliku CSV."""
     from django.conf import settings
@@ -569,6 +692,7 @@ def build_main_aed(directory: Optional[Path] = None) -> AEDBuild:
     report: List[Dict[str, Any]] = []
     sources = collect_sources(report)
     main_df = build_main_df(sources, report=report)
+    report.extend(diff_main(read_previous_main_df(), main_df))
     path = directory / f"{settings.MAIN_AED_FILE_NAME_PREFIX} {datetime.datetime.now():%Y%m%d}.csv"
     path.write_bytes(main_df_to_csv_bytes(main_df))
     return AEDBuild(main_df=main_df, report=report, csv_path=path)
@@ -697,6 +821,8 @@ def merge_summary(build: AEDBuild) -> str:
         f"Ostatnie scalenie: {datetime.date.today():%Y-%m-%d}. Rekordów w wykazie zbiorczym: {len(build.main_df)} "
         f"(dysponentów z danymi: {providers}). Odrzuconych wierszy: {counts.get(REPORT_REJECTED, 0)}, "
         f"połączonych duplikatów: {counts.get(REPORT_MERGED, 0)}, pominiętych zasobów: {counts.get(REPORT_SKIPPED, 0)}. "
+        f"Zmiany od poprzedniego scalenia: nowych {counts.get(REPORT_NEW, 0)}, usuniętych {counts.get(REPORT_REMOVED, 0)}, "
+        f"zmienionych {counts.get(REPORT_CHANGED, 0)}. "
         "Każdy wiersz raportu opisuje jedną uwagę do wykazu dostawcy: poprawcie plik i scalenie uwzględni zmiany następnego dnia."
     )
 

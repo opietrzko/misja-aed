@@ -213,3 +213,20 @@ def test_row_without_address_and_coordinates_keeps_generic_reason():
     df = pd.DataFrame({"Obiekt": ["szkoła"], "Godziny": ["całodobowo"]})
     out, report, _ = convert_dataframe(df, defaults={COL_VERIFIED: "2026-11-20", COL_ACCESS: "swobodny", COL_STATUS: "czynny"})
     assert "(jest adres)" not in report[0]["szczegoly"]
+
+
+def test_city_is_filled_from_address_when_source_has_no_city_column():
+    df = pd.DataFrame(
+        {
+            "Adres": ["ul. Paradna 36, 93-345 Łódź"],
+            "Szerokość": ["51.7592"],
+            "Długość": ["19.4560"],
+            "Godziny": ["całodobowo"],
+            "Dostęp": ["tak"],
+            "Stan": ["sprawny"],
+            "Data weryfikacji": ["2026-11-01"],
+        }
+    )
+    out, report, _ = convert_dataframe(df)
+    assert len(out) == 1, report
+    assert out.iloc[0]["Miejscowość"] == "Łódź"

@@ -59,6 +59,14 @@ COL_SOURCES_COUNT = "Liczba źródeł"
 COL_OTHER_PROVIDERS = "Pozostali dysponenci"
 COL_FRESHNESS = "Aktualność"
 COL_DAYS_SINCE = "Dni od ostatniej weryfikacji"
+COL_MERGE_CONF = "Pewność połączenia"
+MERGE_CONF_NONE = (
+    "nie dotyczy"  # zapisujemy tekstem („99%”), bo portal z pierwszych wierszy wnioskuje typ liczbowy i łamie go puste wartości
+)
+COL_TRUST = "Wiarygodność"
+COL_NOTES = "Uwagi do danych"
+COL_POSTAL = "Kod pocztowy"
+COL_HOURS_NORM = "Godziny (znormalizowane)"
 
 # Aktualność rekordu: weryfikacja nie starsza niż FRESH_DAYS = aktualny; do STALE_DAYS = do weryfikacji; starsza = nieaktualny.
 FRESH_DAYS = 365
@@ -90,8 +98,13 @@ MAIN_AED_COLUMNS: List[str] = [
     COL_CONTACT,
     COL_SOURCES_COUNT,
     COL_OTHER_PROVIDERS,
+    COL_MERGE_CONF,
     COL_FRESHNESS,
     COL_DAYS_SINCE,
+    COL_TRUST,
+    COL_NOTES,
+    COL_POSTAL,
+    COL_HOURS_NORM,
 ]
 
 # Raport scalania: jeden wiersz = jedna uwaga do wykazu dostawcy (odrzucony wiersz, połączony duplikat, pominięty zasób).
@@ -107,6 +120,9 @@ REPORT_REJECTED = "odrzucono wiersz"
 REPORT_MERGED = "połączono z innym dysponentem"
 REPORT_SKIPPED = "pominięto zasób"
 REPORT_OK = "brak uwag"
+REPORT_NEW = "nowy rekord"
+REPORT_REMOVED = "usunięto z wykazu zbiorczego"
+REPORT_CHANGED = "zmieniony rekord"
 
 MAIN_AED_REQUIRED_SOURCE_COLUMNS: List[str] = [
     COL_ID,
@@ -133,5 +149,9 @@ ENUM_COLUMNS: Dict[str, List[str]] = {
 POLAND_LAT_RANGE = (48.9, 55.0)
 POLAND_LON_RANGE = (14.0, 24.2)
 
-# Dwa AED bliżej niż tyle metrów traktujemy jako ten sam punkt (deduplikacja).
-DEDUP_DISTANCE_METERS = 25
+# Deduplikacja punktów RÓŻNYCH dysponentów. Do DEDUP_CERTAIN_METERS to na pewno to samo urządzenie.
+# Od DEDUP_CERTAIN_METERS do DEDUP_MAX_METERS łączymy tylko, gdy opisy miejsca są podobne (co najmniej DEDUP_TEXT_MIN).
+# Progi to nasze założenia (dokładność współrzędnych dysponentów bywa rzędu kilku-kilkunastu metrów).
+DEDUP_CERTAIN_METERS = 10
+DEDUP_MAX_METERS = 50
+DEDUP_TEXT_MIN = 0.6

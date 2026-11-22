@@ -256,3 +256,107 @@ def test_geojson_is_json_serializable_with_numpy_values():
     text = json.dumps(main_df_to_geojson(main), ensure_ascii=False)
     props = json.loads(text)["features"][0]["properties"]
     assert props["Dni od ostatniej weryfikacji"] == 21 and props["Aktualność"] == "aktualny"
+
+
+# --- nowe algorytmy: deduplikacja z tekstem, wzbogacanie, wiarygodność ---
+
+NORTH_30M = 50.06027  # ok. 30 m na północ od 50.06
+
+
+def _two_providers(second_over):
+    a = _with_provider([make_row(**{"Identyfikator AED": "A-1"})], "Urząd")
+    b = _with_provider([make_row(**{"Identyfikator AED": "B-1", **second_over})], "Fundacja")
+    clean, _ = sanitize_source_df(pd.concat([a, b], ignore_index=True))
+    return deduplicate(clean)
+
+
+def test_dedup_30m_apart_merges_only_when_address_is_similar():
+    same_address = _two_providers({"Szerokość geograficzna": NORTH_30M})
+    assert len(same_address) == 1
+    different_address = _two_providers(
+        {"Szerokość geograficzna": NORTH_30M, "Ulica i numer": "ul. Dietla 50", "Opis lokalizacji": "portiernia"}
+    )
+    assert len(different_address) == 2
+
+
+def test_dedup_does_not_merge_neighbouring_building_numbers():
+    result = _two_providers({"Szerokość geograficzna": NORTH_30M, "Ulica i numer": "ul. Floriańska 10"})
+    assert len(result) == 2
+
+
+def test_dedup_within_certain_radius_merges_even_with_different_address():
+    result = _two_providers(
+        {"Szerokość geograficzna": 50.06003, "Ulica i numer": "ul. Dietla 50", "Opis lokalizacji": "portiernia"}
+    )
+    assert len(result) == 1
+
+
+def test_dedup_beyond_max_radius_never_merges():
+    result = _two_providers({"Szerokość geograficzna": 50.0609})  # ok. 100 m
+    assert len(result) == 2
+
+
+def test_merge_confidence_is_lowest_of_merges_and_empty_without_merge():
+    merged = _two_providers({"Szerokość geograficzna": 50.06003})
+    assert int(merged.iloc[0]["Pewność połączenia"].rstrip("%")) >= 90
+    separate = _two_providers({"Szerokość geograficzna": 50.0609})
+    assert set(separate["Pewność połączenia"]) == {
+        "nie dotyczy"
+    }  # tekst, nie liczba: portal łamie typ liczbowy przy pustych wartościach
+
+
+def test_more_complete_record_wins_when_status_and_date_are_equal():
+    a = _with_provider(
+        [
+            make_row(
+                **{"Identyfikator AED": "A-1", "Opis lokalizacji": None, "Rodzaj obiektu": None, "Kontakt instytucjonalny": None}
+            )
+        ],
+        "Urząd",
+    )
+    b = _with_provider([make_row(**{"Identyfikator AED": "B-1", "Szerokość geograficzna": 50.06003})], "Fundacja")
+    clean, _ = sanitize_source_df(pd.concat([a, b], ignore_index=True))
+    assert list(deduplicate(clean)[COL_ID]) == ["B-1"]
+
+
+def test_build_main_df_normalizes_address_and_hours_and_scores_trust():
+    row = make_row(
+        **{
+            "Ulica i numer": "ulica Paradna 36, 93-345 Łódź",
+            "Miejscowość": None,
+            "Szerokość geograficzna": 50.06143,
+            "Długość geograficzna": 19.93658,
+            "Dostępność": "w godzinach",
+            "Godziny dostępności": "pn–pt 7:30–16:00",
+        }
+    )
+    main = build_main_df([(make_df(row), {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})], today=TODAY)
+    r = main.iloc[0]
+    assert (r["Ulica i numer"], r["Miejscowość"], r["Kod pocztowy"]) == ("ul. Paradna 36", "Łódź", "93-345")
+    assert r["Godziny (znormalizowane)"] == "Mo-Fr 07:30-16:00"
+    assert 0 < r["Wiarygodność"] <= 100 and pd.isna(r["Uwagi do danych"])
+
+
+def test_unparsed_hours_and_repeated_points_are_flagged_and_lower_trust():
+    base = {"Dostępność": "w godzinach", "Godziny dostępności": "po uzgodnieniu"}
+    rows = [make_row(**{**base, "Identyfikator AED": f"A-{n}"}) for n in range(3)]  # trzy rekordy w tym samym punkcie
+    main = build_main_df([(make_df(*rows), {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})], today=TODAY)
+    notes = main.iloc[0]["Uwagi do danych"]
+    assert "godziny nie zostały rozpoznane" in notes and "identyczne współrzędne w 3 rekordach" in notes
+    assert pd.isna(main.iloc[0]["Godziny (znormalizowane)"])
+    clean_row = build_main_df(
+        [(make_df(make_row()), {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})], today=TODAY
+    )
+    assert main.iloc[0]["Wiarygodność"] < clean_row.iloc[0]["Wiarygodność"]
+
+
+def test_location_text_is_used_only_when_street_is_missing():
+    # ten sam ogólnik „hol” nie ratuje dwóch różnych adresów, ale łączy rekordy bez adresu
+    different = _two_providers({"Szerokość geograficzna": NORTH_30M, "Ulica i numer": "ul. Dietla 50"})
+    assert len(different) == 2
+    a = _with_provider([make_row(**{"Identyfikator AED": "A-1", "Ulica i numer": None})], "Urząd")
+    b = _with_provider(
+        [make_row(**{"Identyfikator AED": "B-1", "Ulica i numer": None, "Szerokość geograficzna": NORTH_30M})], "Fundacja"
+    )
+    clean, _ = sanitize_source_df(pd.concat([a, b], ignore_index=True))
+    assert len(deduplicate(clean)) == 1

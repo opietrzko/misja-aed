@@ -11,6 +11,7 @@ ______________________________________________________________________
 - Dodano model `AggregatedAEDInfo` i zadanie Celery `create_main_aed_resource_task` (codziennie o 3:45), które scala wykazy AED w zasób zbiorczy aktualizowany w miejscu, wylicza aktualność rekordów, wskazuje pozostałych dysponentów punktu i tworzy raport scalania oraz wersję GeoJSON
 - Dodano automatyczne mapowanie współrzędnych na mapę portalu dla zasobów z flagą wykazu AED
 - Dodano konwerter plików do wzorca AED (reguły, bez AI): komenda `aed_convert` oraz strona `/aed/konwerter/` w panelu administracyjnym z pobieraniem wzorca xlsx
+- Dodano algorytmy jakości danych wykazu AED (jawne reguły, bez AI): wiarygodność rekordu 0-100, flagi anomalii, parser godzin dostępności do jednolitego zapisu, normalizacja i rozbijanie adresów, deduplikacja z podobieństwem adresu i pewnością połączenia oraz wykrywanie zmian między scaleniami w raporcie
 - Dodano komendy `aed_build_main`, `aed_make_template` i `aed_seed_demo`
 - Dodano pole `contains_aed_list` w API zasobów (`/resources`, `/search`) oraz filtr o tej nazwie
 - Dodano schemat XSD harvestera 1.14 z opcjonalnym elementem `containsAedList` oraz walidację wykazu AED w imporcie XML i CKAN (nowy kod błędu importu częściowego `RES_AED_INVALID`)

@@ -62,11 +62,29 @@ AGGREGATE_NOTES = {
     "Zakres referencyjny źródła": "wyliczana: tytuł zasobu źródłowego, czyli zakres, który dysponent deklaruje",
     "Identyfikator zasobu źródłowego": "wyliczana: id zasobu w portalu, z którego pochodzi rekord",
     "Data aktualizacji zasobu źródłowego": "wyliczana: data danych zasobu źródłowego",
-    "Liczba źródeł": "wyliczana: ile wykazów zgłosiło to samo urządzenie (punkty różnych dysponentów bliżej niż 25 m)",
+    "Liczba źródeł": (
+        "wyliczana: ile wykazów zgłosiło to samo urządzenie (różni dysponenci, " "do 10 m zawsze, do 50 m przy podobnym adresie)"
+    ),
     "Pozostali dysponenci": "wyliczana: pozostali dysponenci tego urządzenia w formie „Dysponent (identyfikator); …”",
     "Aktualność": (
         "wyliczana: nieczynny / nieaktualny (weryfikacja starsza niż 2 lata) / do weryfikacji "
         "(starsza niż rok, status „do weryfikacji” lub data z przyszłości) / aktualny"
+    ),
+    "Pewność połączenia": (
+        "wyliczana: 0-100, najniższa pewność spośród połączeń rekordu (z "
+        "odległości i podobieństwa adresu); tekst, np. „99%” albo „nie dotyczy” bez połączeń"
+    ),
+    "Wiarygodność": (
+        "wyliczana: 0-100 (kompletność opisu 30, aktualność 30, potwierdzenie przez inne źródła 20, "
+        "dokładność współrzędnych 10, godziny w zapisie maszynowym 10; minus 10 za każdą uwagę; nieczynny maks. 20)"
+    ),
+    "Uwagi do danych": (
+        "wyliczana: flagi anomalii (niska precyzja współrzędnych, identyczne "
+        "współrzędne wielu rekordów, nierozpoznane godziny)"
+    ),
+    "Kod pocztowy": "wyliczana: wyjęty z adresu źródła (np. „ul. Paradna 36, 93-345 Łódź”), jeśli tam był",
+    "Godziny (znormalizowane)": (
+        "wyliczana: godziny w jednolitym zapisie (np. Mo-Fr 07:30-16:00; " "24/7); puste, gdy nie rozpoznano"
     ),
     "Dni od ostatniej weryfikacji": "wyliczana: liczba dni od daty ostatniej weryfikacji do dnia scalenia",
 }

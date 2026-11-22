@@ -18,7 +18,6 @@ import difflib
 import json
 import math
 import re
-import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -45,20 +44,13 @@ from mcod.aed.constants import (
     POLAND_LAT_RANGE,
     POLAND_LON_RANGE,
 )
+from mcod.aed.text import norm, normalize_address
 
 PROFILES_DIR = Path(__file__).resolve().parent / "profiles"
 FUZZY_THRESHOLD = 0.82
 
 # Kolumny wzorca (bez "Lp."), które konwerter potrafi wypełnić.
 TARGET_COLUMNS: List[str] = [c for c in AED_COLUMNS if c != "Lp."]
-
-
-def norm(text: Any) -> str:
-    """Nazwa kolumny w postaci porównywalnej: małe litery, bez polskich znaków i interpunkcji."""
-    s = str(text).lower().replace("ł", "l")
-    s = unicodedata.normalize("NFKD", s)
-    s = "".join(ch for ch in s if not unicodedata.combining(ch))
-    return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
 
 # Synonimy nazw kolumn (w postaci znormalizowanej). Telefon celowo pominięty: to często dane osobowe.
@@ -498,11 +490,14 @@ def _row_values(get, lat, lon) -> Dict[str, Any]:
         availability = normalize_availability(None, hours)
     verified = parse_date(get(COL_VERIFIED))
     ident = get(COL_ID)
+    city = get(COL_CITY)
+    if _blank(city):
+        city = normalize_address(get(COL_STREET)).city  # „ul. Paradna 36, 93-345 Łódź” -> Łódź
     return {
         COL_ID: str(ident).strip() if ident is not None else None,
         COL_LAT: lat,
         COL_LON: lon,
-        COL_CITY: get(COL_CITY),
+        COL_CITY: city,
         COL_STREET: get(COL_STREET),
         COL_TERYT: parse_teryt(get(COL_TERYT)),
         COL_LOCATION: get(COL_LOCATION),
