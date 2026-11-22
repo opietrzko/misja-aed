@@ -15,6 +15,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile, SimpleUploadedF
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from mcod.aed.constants import AED_COLUMNS, AED_RESOURCE_EXTENSIONS
+from mcod.aed.utils import get_aed_resource_for_institution, validate_aed_file_columns
 from mcod.datasets.models import Dataset
 from mcod.lib.field_validators import ContainsLetterValidator
 from mcod.lib.forms.mixins import HighValueDataFormValidatorMixin, UnEscapeWidgetMixin
@@ -264,6 +266,18 @@ class ResourceForm(forms.ModelForm, HighValueDataFormValidatorMixin):
         ),
         widget=CheckboxSelect(attrs={"class": "inline"}),
     )
+    contains_aed_list = forms.ChoiceField(
+        required=False,
+        label="Wykaz defibrylatorów AED",
+        choices=[(True, _("Yes")), (False, _("No"))],
+        initial=False,
+        help_text=(
+            "Wskazanie TAK oznacza, że zasób jest aktualnym wykazem defibrylatorów AED tej instytucji w "
+            "wzorcowym układzie kolumn (Misja AED). Wykazy wszystkich dostawców są codziennie scalane "
+            "w ogólnopolski wykaz zbiorczy. Dozwolone formaty: csv, xls, xlsx. Za jakość danych odpowiada dostawca."
+        ),
+        widget=CheckboxSelect(attrs={"class": "inline"}),
+    )
     confirm_save = forms.CharField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
@@ -277,6 +291,10 @@ class ResourceForm(forms.ModelForm, HighValueDataFormValidatorMixin):
             )
             # https://stackoverflow.com/a/42629593/1845230
             self.fields["related_resource"].widget.choices = self.fields["related_resource"].choices
+
+    def clean_contains_aed_list(self) -> str:
+        # pole opcjonalne: pusta wartość traktujemy jako "Nie" (model ma BooleanField bez null)
+        return self.cleaned_data.get("contains_aed_list") or "False"
 
     def clean_confirm_save(self) -> bool:
         confirm_save_str: str = self.cleaned_data.get(SAVE_CONFIRMATION_FIELD, "false")
@@ -333,10 +351,64 @@ class ResourceForm(forms.ModelForm, HighValueDataFormValidatorMixin):
             if not is_main_dga_resource and organization:
                 self._remove_dga_flag_from_current_dga_resource_if_needed(data, organization)
 
+        if data.get("contains_aed_list") == "True":
+            self._validate_aed_list(data, organization, creating_resource, contains_protected_data)
+
         self.validate_high_value_data_flags_conflict(data)
         if organization:
             self._validate_high_value_data_from_ec_list_organization(data, organization)
         return data
+
+    def _validate_aed_list(
+        self,
+        data: Dict[str, Any],
+        organization: Optional[Organization],
+        creating_resource: bool,
+        contains_protected_data: bool,
+    ) -> None:
+        """Walidacja wykazu AED - odpowiednik walidacji wykazu DGA (kolumny, jeden wykaz na instytucję)."""
+        if contains_protected_data:
+            self.add_error("contains_aed_list", "Zasób nie może być jednocześnie wykazem DGA i wykazem AED.")
+            return
+        if data.get("link"):
+            self.add_error("link", "Wykaz AED musi być plikiem csv, xls lub xlsx wybranym z dysku, a nie linkiem.")
+            return
+
+        file = data.get("file")
+        if not file and not creating_resource:
+            main_file = self.instance.main_file
+            file = create_uploaded_file_from_path(main_file.path) if main_file else None
+        if not file:
+            self.add_error("contains_aed_list", "Wskaż plik csv, xls lub xlsx z wykazem AED.")
+            return
+
+        extension = os.path.splitext(getattr(file, "name", "") or "")[1].lstrip(".").lower()
+        if extension not in AED_RESOURCE_EXTENSIONS:
+            self.add_error("contains_aed_list", "Wykaz AED musi być w formacie csv, xls lub xlsx.")
+            return
+        if not validate_aed_file_columns(file, extension):
+            self.add_error(
+                "contains_aed_list",
+                "Wykaz AED może zawierać wyłącznie kolumny o podanych nazwach i w tej kolejności: "
+                + ", ".join(AED_COLUMNS)
+                + ".",
+            )
+            return
+        if hasattr(file, "seek"):
+            file.seek(0)
+
+        if organization:
+            try:
+                current = get_aed_resource_for_institution(organization.pk, self.instance.pk or None)
+            except MultipleObjectsReturned:
+                self.add_error("contains_aed_list", "Instytucja ma więcej niż jeden wykaz AED.")
+                return
+            if current:
+                self.add_error(
+                    "contains_aed_list",
+                    f"Instytucja ma już wykaz AED (zasób: {current.title}). Zaktualizuj istniejący zasób "
+                    "albo odznacz go jako wykaz AED.",
+                )
 
     def _validate_data_date(self, data: dict) -> None:
         data_date_err = Resource.get_auto_data_date_errors(data)
