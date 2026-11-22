@@ -52,8 +52,21 @@ OSM ma licencję ODbL (share-alike): taki wykaz publikujemy osobno, nie mieszamy
 
 ## Co dzieje się podczas scalania
 - odrzucane są pojedyncze błędne wiersze (współrzędne poza Polską, niedozwolone wartości słownikowe, zła data), a nie cały wykaz,
-- duplikaty (ten sam AED u kilku dysponentów, odległość ≤ 25 m) są łączone; kolumna „Liczba źródeł” pokazuje ile wykazów go zgłosiło,
-- w zbiorczym zostaje rekord ze statusem „czynny” i najświeższą weryfikacją.
+- duplikaty (ten sam AED u **różnych** dysponentów, odległość ≤ 25 m) są łączone, a w zbiorczym zostaje rekord ze statusem „czynny” i najświeższą weryfikacją.
+  Kolumna „Liczba źródeł” pokazuje, ile wykazów go zgłosiło, a „Pozostali dysponenci” wymienia pozostałych w formie „Dysponent (identyfikator)”.
+  Dwa urządzenia **jednego** dysponenta blisko siebie (np. w dużym budynku) nie są łączone,
+- każdy rekord dostaje **Aktualność** i „Dni od ostatniej weryfikacji”: `nieczynny` (status), `nieaktualny` (weryfikacja starsza niż 2 lata),
+  `do weryfikacji` (starsza niż rok, status „do weryfikacji” albo data z przyszłości), `aktualny` (czynny i zweryfikowany w ciągu roku),
+- zasób zbiorczy jest **aktualizowany w miejscu**: ma stały identyfikator i adres, więc linki i zakładki nie psują się po każdym scaleniu
+  (dane, schemat mapy i indeks wyszukiwarki odświeża portal tak jak przy ręcznej zmianie pliku w panelu),
+- zasoby wykazów AED można filtrować w API: `/1.4/resources?contains_aed_list=true` oraz `/1.4/search?contains_aed_list=true`.
+
+## Dostawcy publikujący przez harvester (XML i CKAN)
+Wykaz AED nie wymaga ręcznego klikania w panelu. Instytucja, która zasila portal harvesterem, oznacza zasób flagą i dostaje tę samą walidację co w formularzu:
+- **XML:** nowy schemat **1.14** (`containsAedList`, element opcjonalny, starsze wersje działają bez zmian). Schemat zasobu sprawdza: plik csv/xls/xlsx pod adresem `url`,
+  wzorcowe kolumny, brak jednoczesnej flagi DGA, co najwyżej jeden wykaz w pliku i brak innego wykazu instytucji dodanego inną drogą.
+- **CKAN:** pole zasobu `contains_aed_list`. Import częściowy odrzuca zbiór z błędnym wykazem i opisuje powód w szczegółach importu w panelu.
+Ograniczenie: w imporcie CKAN nie sprawdzamy jeszcze, czy instytucja ma już wykaz dodany inną drogą (w XML sprawdzamy).
 
 ## Dane demonstracyjne
 Pliki w `backend/mcod/aed/demo_data/` (generator: `aed-demo/generate_demo.py`) są **syntetyczne** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawierają celowe błędy, żeby pokazać walidację
