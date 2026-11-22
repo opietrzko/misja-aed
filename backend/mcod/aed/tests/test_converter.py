@@ -152,3 +152,25 @@ def test_output_is_accepted_by_aggregation_validation():
     out, _, _ = convert_dataframe(df)
     main = build_main_df([(out, {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})])
     assert len(main) == len(out)
+
+
+def test_hours_column_is_not_mistaken_for_access_column():
+    """Prawdziwy układ pliku z Łodzi: 'Godz. dostępu' to godziny, a nie 'Sposób dostępu'."""
+    df = pd.DataFrame(columns=["", "Podmiot", "Obiekt", "Adres", "Lokalizacja w obiekcie ", "Godz. dostępu"])
+    m = map_columns(df)
+    assert m.columns["Godziny dostępności"].sources == ["Godz. dostępu"]
+    assert "Sposób dostępu" not in m.columns
+    assert m.columns["Rodzaj obiektu"].sources == ["Obiekt"]
+    assert m.columns["Ulica i numer"].sources == ["Adres"]
+    assert m.columns["Opis lokalizacji"].sources == ["Lokalizacja w obiekcie "]
+
+
+@pytest.mark.parametrize("value", ["caołobowo", "całodobowe", "Całodobowo", "całodobowy"])
+def test_availability_tolerates_typos_in_availability_and_in_hours_column(value):
+    assert normalize_availability(value) == "całodobowo"
+    assert normalize_availability(None, value) == "całodobowo"  # w prawdziwym pliku literówki są w kolumnie godzin
+
+
+def test_availability_typo_tolerance_does_not_touch_real_hours():
+    assert normalize_availability(None, "godz: 8.00-18.00 w dni robocze") == "w godzinach"
+    assert normalize_availability(None, "pn-pt 7-17") == "w godzinach"

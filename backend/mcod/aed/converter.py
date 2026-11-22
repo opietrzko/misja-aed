@@ -72,7 +72,7 @@ SYNONYMS: Dict[str, List[str]] = {
     COL_LOCATION: ["opis lokalizacji", "lokalizacja", "opis miejsca", "miejsce", "location", "umiejscowienie", "gdzie", "opis"],
     COL_OBJECT_TYPE: ["rodzaj obiektu", "typ obiektu", "obiekt", "rodzaj", "kategoria", "object type"],
     COL_AVAILABILITY: ["dostepnosc", "availability", "czas dostepnosci"],
-    COL_HOURS: ["godziny dostepnosci", "godziny", "godziny otwarcia", "opening hours", "godziny pracy"],
+    COL_HOURS: ["godziny dostepnosci", "godziny", "godziny otwarcia", "opening hours", "godziny pracy", "godz dostepu", "godziny dostepu", "godz dostepnosci", "godz otwarcia", "godz", "czas pracy"],
     COL_ACCESS: ["sposob dostepu", "dostep", "access", "rodzaj dostepu"],
     COL_STATUS: ["status urzadzenia", "status", "stan", "stan urzadzenia", "sprawnosc"],
     COL_VERIFIED: [
@@ -206,6 +206,12 @@ def normalize_availability(value: Any, hours: Any = None) -> Optional[str]:
     both = f"{text} {h}"
     if any(k in both for k in ("calodob", "24 7", "24h", "24 h", "cala dob", "non stop", "nonstop", "zawsze")):
         return "całodobowo"
+    # literówki w pojedynczym słowie, np. "caołobowo": tylko dla wartości bez cyfr (nie dla godzin typu 8.00-18.00)
+    for part in (text, h):
+        if part and not any(ch.isdigit() for ch in part) and difflib.get_close_matches(
+            part.replace(" ", ""), ["calodobowo", "calodobowe", "calodobowy"], n=1, cutoff=0.8
+        ):
+            return "całodobowo"
     if "ograniczon" in text:
         return "ograniczona"
     if "godzin" in text or h:
@@ -338,21 +344,24 @@ def map_columns(df: pd.DataFrame, profile: Optional[Dict[str, Any]] = None) -> M
                 used.add(col)
                 break
 
-    # 3) podobieństwo nazw
+    # 3) podobieństwo nazw: wszystkie pary naraz, przydział od najlepszego wyniku
+    #    (inaczej "Godz. dostępu" trafiałoby do "Sposobu dostępu" tylko dlatego, że ta kolumna wzorca jest wcześniej)
+    pairs = []
     for target in TARGET_COLUMNS:
         if target in mapping.columns:
             continue
-        best, best_ratio = None, 0.0
+        names = {norm(target), *SYNONYMS.get(target, [])}
         for col in columns:
             if col in used:
                 continue
-            for name in {norm(target), *SYNONYMS.get(target, [])}:
-                ratio = difflib.SequenceMatcher(None, norm(col), name).ratio()
-                if ratio > best_ratio:
-                    best, best_ratio = col, ratio
-        if best is not None and best_ratio >= FUZZY_THRESHOLD:
-            mapping.columns[target] = ColumnMatch([best], best_ratio, "podobieństwo")
-            used.add(best)
+            ratio = max(difflib.SequenceMatcher(None, norm(col), name).ratio() for name in names)
+            if ratio >= FUZZY_THRESHOLD:
+                pairs.append((ratio, target, col))
+    for ratio, target, col in sorted(pairs, key=lambda x: -x[0]):
+        if target in mapping.columns or col in used:
+            continue
+        mapping.columns[target] = ColumnMatch([col], ratio, "podobieństwo")
+        used.add(col)
 
     # 4) po zawartości
     for col in columns:
