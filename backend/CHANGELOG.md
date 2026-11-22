@@ -6,9 +6,23 @@ ______________________________________________________________________
 
 ### New
 
+- Dodano moduł `mcod.aed` (Misja AED): wzorcowy zakres danych o defibrylatorach, walidacja i scalanie wykazów AED wielu dostawców w ogólnopolski wykaz zbiorczy
+- Dodano pole zasobu `contains_aed_list` (migracja `resources.0076`) wraz z walidacją pliku w formularzu zasobu (format csv/xls/xlsx, nazwy i kolejność kolumn, jeden wykaz AED na instytucję)
+- Dodano model `AggregatedAEDInfo` i zadanie Celery `create_main_aed_resource_task` (codziennie o 3:45), które scala wykazy AED w zasób zbiorczy aktualizowany w miejscu, wylicza aktualność rekordów, wskazuje pozostałych dysponentów punktu i tworzy raport scalania oraz wersję GeoJSON
+- Dodano automatyczne mapowanie współrzędnych na mapę portalu dla zasobów z flagą wykazu AED
+- Dodano konwerter plików do wzorca AED (reguły, bez AI): komenda `aed_convert` oraz strona `/aed/konwerter/` w panelu administracyjnym z pobieraniem wzorca xlsx
+- Dodano komendy `aed_build_main`, `aed_make_template` i `aed_seed_demo`
+- Dodano pole `contains_aed_list` w API zasobów (`/resources`, `/search`) oraz filtr o tej nazwie
+- Dodano schemat XSD harvestera 1.14 z opcjonalnym elementem `containsAedList` oraz walidację wykazu AED w imporcie XML i CKAN (nowy kod błędu importu częściowego `RES_AED_INVALID`)
+
 ### Changes
 
+- Zbiór zbiorczy wykazu AED jest udostępniany na licencji CC BY 4.0
+- Docker: `host.docker.internal` mapowany na `host-gateway` (działa także na macOS)
+
 ### Fixes
+
+- Frontend: `LeafletService` używa importu ES zamiast `require('leaflet')`, który nie działał na serwerze deweloperskim (mapa zasobu się nie renderowała)
 
 ### Breaks
 
