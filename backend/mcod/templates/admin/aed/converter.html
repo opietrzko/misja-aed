@@ -23,6 +23,9 @@
      Konwerter dopasuje kolumny do wzorcowego zakresu danych, ujednolici wartości i pokaże raport. Działa na jawnych regułach, bez AI.
      Czego źródło nie podaje, nie jest zgadywane: te pola trzeba uzupełnić poniżej albo wiersz zostanie odrzucony.</p>
 
+  <p><a class="btn" href="{% url 'aed-template' %}">Pobierz wzorcowy plik (xlsx)</a>
+     <span class="help">Wzór kolumn wykazu AED z opisem każdej kolumny i słownikami wartości.</span></p>
+
   {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
   <form method="post" enctype="multipart/form-data">

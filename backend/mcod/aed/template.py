@@ -1,5 +1,6 @@
 """Generator wzorcowego pliku xlsx (wymóg konkursowy: wzorcowy zakres danych)."""
 
+from io import BytesIO
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -48,8 +49,7 @@ AGGREGATE_NOTES = {
 }
 
 
-def build_template(path) -> Path:
-    path = Path(path)
+def _build_workbook() -> Workbook:
     wb = Workbook()
     ws = wb.active
     ws.title = "Wykaz AED (wzór)"
@@ -87,6 +87,17 @@ def build_template(path) -> Path:
     for c in agg[1]:
         c.font = Font(bold=True)
 
+    return wb
+
+
+def build_template(path) -> Path:
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    wb.save(path)
+    _build_workbook().save(path)
     return path
+
+
+def build_template_bytes() -> bytes:
+    buf = BytesIO()
+    _build_workbook().save(buf)
+    return buf.getvalue()

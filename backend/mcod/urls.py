@@ -4,7 +4,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path
 from django.views.generic.base import TemplateView
 
-from mcod.aed.views import converter_admin_view, download_admin_view
+from mcod.aed.views import converter_admin_view, download_admin_view, template_admin_view
 from mcod.core.admin_metrics_view import prometheus_metrics_view
 from mcod.datasets.views import ConditionLabelsAdminView, DatasetAutocompleteView
 from mcod.organizations.views import InstitutionTypeAdminView, OrganizationAutocompleteView
@@ -34,6 +34,7 @@ urlpatterns = common_urlpatterns + [
     path("i18n/", include("django.conf.urls.i18n")),
     path("login/", CustomAdminLoginView.as_view(), name="login"),
     path("aed/konwerter/", converter_admin_view, name="aed-convert"),
+    path("aed/wzorzec.xlsx", template_admin_view, name="aed-template"),
     path("aed/konwerter/pobierz/<str:key>/<str:kind>/", download_admin_view, name="aed-convert-download"),
     path("", admin.site.urls, name="admin"),
     path("pn-apps/", include("mcod.pn_apps.urls")),

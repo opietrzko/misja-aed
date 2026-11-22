@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods
 
 from mcod.aed.constants import COL_ACCESS, COL_AVAILABILITY, COL_STATUS, COL_VERIFIED
 from mcod.aed.converter import PROFILES_DIR, convert_dataframe, load_profile, read_any
+from mcod.aed.template import build_template_bytes
 from mcod.aed.utils import main_df_to_csv_bytes
 
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
@@ -110,5 +111,15 @@ def download_view(request, key, kind):
     return response
 
 
+def template_view(request):
+    response = HttpResponse(
+        build_template_bytes(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = 'attachment; filename="wzorcowy-zakres-danych-AED.xlsx"'
+    return response
+
+
 converter_admin_view = admin.site.admin_view(converter_view)
+template_admin_view = admin.site.admin_view(template_view)
 download_admin_view = admin.site.admin_view(download_view)
