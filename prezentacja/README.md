@@ -4,13 +4,14 @@ Prezentacja konkursowa (10 slajdów) do zadania **Misja AED - Dane na ratunek**.
 
 | Plik | Co to jest |
 |---|---|
-| [`Misja-AED-prezentacja-wersja-robocza.pptx`](Misja-AED-prezentacja-wersja-robocza.pptx) | **PowerPoint z animacjami**: 10 slajdów, notatki prelegenta, trzy animowane GIF-y (scena problemu, logo, linia EKG). Animacje działają w trybie pokazu slajdów (F5) |
+| [`Misja-AED-prezentacja-wersja-robocza.pptx`](Misja-AED-prezentacja-wersja-robocza.pptx) | **PowerPoint z animacjami**: 10 slajdów, notatki prelegenta, animowane GIF-y (scena problemu, logo, linia EKG) i **animacja budowania ostatniego slajdu**. Animacje działają w trybie pokazu slajdów (F5) |
 | [`zrodla/`](zrodla/) | Źródła talii (HTML i CSS), wyeksportowane z edytora slajdów |
 
 ## Uwagi o pliku PowerPoint
 - Każdy slajd to obraz (tło) z naniesionymi animowanymi GIF-ami, więc **tekstu na slajdach nie da się w nim edytować**. Do edycji służy talia w edytorze slajdów, a źródła są w `zrodla/`.
 - Zrzuty ekranu wstaw w PowerPoincie jako zwykłe obrazy **na szare pola „ZRZUT 1-12”** (Wstaw, Obraz), przycinając je do rozmiaru pola.
 - GIF ze sceną problemu odtwarza się raz, a logo i linia EKG w pętli. W widoku edycji widać tylko pierwszą klatkę.
+- **Ostatni slajd buduje się sam** po wejściu na niego: kolejne słowa tytułu (efekt „pojawianie się”), potem linia EKG „wjeżdża” od lewej i pulsuje w pętli, na końcu wchodzą zdanie, hasło i znak. Są to zwykłe animacje PowerPointa (Animacje, Okienko animacji) i można je edytować. Słowa, teksty i znak są na tym slajdzie osobnymi obrazami.
 - Plik nie był otwierany w PowerPoincie (powstał poza nim), więc przed oddaniem warto go raz otworzyć i przejść w trybie pokazu.
 
 ## Co jest jeszcze do zrobienia
