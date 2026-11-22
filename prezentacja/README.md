@@ -5,7 +5,6 @@ Prezentacja konkursowa (10 slajdów) do zadania **Misja AED - Dane na ratunek**.
 | Plik | Co to jest |
 |---|---|
 | [`Misja-AED-prezentacja-wersja-robocza.pptx`](Misja-AED-prezentacja-wersja-robocza.pptx) | **PowerPoint z animacjami**: 10 slajdów, notatki prelegenta, trzy animowane GIF-y (scena problemu, logo, linia EKG). Animacje działają w trybie pokazu slajdów (F5) |
-| [`Misja-AED-prezentacja-wersja-robocza.pdf`](Misja-AED-prezentacja-wersja-robocza.pdf) | Wersja do przeczytania: 10 stron w stanie końcowym, **bez animacji** |
 | [`zrodla/`](zrodla/) | Źródła talii (HTML i CSS), wyeksportowane z edytora slajdów |
 
 ## Uwagi o pliku PowerPoint
@@ -16,10 +15,10 @@ Prezentacja konkursowa (10 slajdów) do zadania **Misja AED - Dane na ratunek**.
 
 ## Co jest jeszcze do zrobienia
 - **Pola „ZRZUT 1-12”** (szare ramki na slajdach 3-8) to miejsca na zrzuty ekranu z działającego prototypu. Opis każdego pola mówi, co wstawić.
-- **Animacje** (scena problemu, animowane logo, linia EKG na ostatnim slajdzie) są w pliku PowerPoint. W PDF nie da się ich zapisać, więc jest tam stan końcowy.
+- **Animacje** (scena problemu, animowane logo, linia EKG na ostatnim slajdzie) są w pliku PowerPoint. 
 
 ## Uwagi o źródłach
-- Ikony na slajdach pochodzą z edytora (`<x-icon>`). W PDF zastąpiono je prostymi odpowiednikami.
+- Ikony na slajdach pochodzą z edytora (`<x-icon>`). W pliku PowerPoint są zastąpione prostymi odpowiednikami.
 - Obrazy w `zrodla/slides/*.html` mają adresy `/_blob/<id>`, które działają tylko w edytorze. Pliki odpowiadają obrazom z repo:
 
 | Id | Plik w repo |
