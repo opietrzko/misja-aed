@@ -6,6 +6,7 @@ na końcu pliku.
 """
 
 import datetime
+import json
 import logging
 import math
 import os
@@ -14,14 +15,10 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import json
-
 import pandas as pd
 
 from mcod.aed.constants import (
     AED_COLUMNS,
-    COL_ACCESS,
-    COL_AVAILABILITY,
     COL_DAYS_SINCE,
     COL_FRESHNESS,
     COL_ID,
@@ -44,13 +41,13 @@ from mcod.aed.constants import (
     FRESHNESS_TO_VERIFY,
     MAIN_AED_COLUMNS,
     MAIN_AED_REQUIRED_SOURCE_COLUMNS,
+    POLAND_LAT_RANGE,
+    POLAND_LON_RANGE,
     REPORT_COLUMNS,
     REPORT_MERGED,
     REPORT_OK,
     REPORT_REJECTED,
     REPORT_SKIPPED,
-    POLAND_LAT_RANGE,
-    POLAND_LON_RANGE,
     STALE_DAYS,
 )
 
@@ -181,6 +178,40 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 _STATUS_RANK = {"czynny": 0, "do weryfikacji": 1, "nieczynny": 2}
 
 
+_UNKNOWN_PROVIDER = "inne źródło"
+_GRID_CELL = 0.001  # ok. 110 m: siatka do szybkiego wyszukiwania sąsiadów
+
+
+def _provider_of(df: pd.DataFrame, i: int) -> str:
+    return df.at[i, COL_PROVIDER] if COL_PROVIDER in df.columns else _UNKNOWN_PROVIDER
+
+
+def _find_duplicate(df: pd.DataFrame, grid: Dict[Tuple[int, int], List[int]], i: int, distance_m: float) -> Optional[int]:
+    """Indeks wcześniej zachowanego rekordu innego dysponenta w promieniu ``distance_m`` albo None."""
+    lat, lon = df.at[i, COL_LAT], df.at[i, COL_LON]
+    cx, cy = int(lat / _GRID_CELL), int(lon / _GRID_CELL)
+    same_provider_check = COL_PROVIDER in df.columns
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            for j in grid.get((cx + dx, cy + dy), []):
+                if same_provider_check and df.at[j, COL_PROVIDER] == df.at[i, COL_PROVIDER]:
+                    continue
+                if haversine_m(lat, lon, df.at[j, COL_LAT], df.at[j, COL_LON]) <= distance_m:
+                    return j
+    return None
+
+
+def _merge_log_entry(df: pd.DataFrame, merged_index: int, winner_index: int) -> Dict[str, Any]:
+    return {
+        "provider": _provider_of(df, merged_index),
+        "resource": df.at[merged_index, COL_SOURCE_RESOURCE] if COL_SOURCE_RESOURCE in df.columns else None,
+        "row": df.at[merged_index, "_row"] if "_row" in df.columns else None,
+        "id": df.at[merged_index, COL_ID],
+        "winner_provider": _provider_of(df, winner_index),
+        "winner_id": df.at[winner_index, COL_ID],
+    }
+
+
 def deduplicate(
     df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS, merge_log: Optional[List[Dict[str, Any]]] = None
 ) -> pd.DataFrame:
@@ -191,72 +222,44 @@ def deduplicate(
     (dwa urządzenia jednego dysponenta blisko siebie to dwa urządzenia, np. w dużym budynku).
     Dopisuje „Liczba źródeł” oraz „Pozostali dysponenci” w postaci „Dysponent (identyfikator); …”.
     """
-    has_provider = COL_PROVIDER in df.columns
+    df = df.copy()
     if df.empty:
-        df = df.copy()
         df[COL_SOURCES_COUNT] = pd.Series(dtype=int)
         df[COL_OTHER_PROVIDERS] = pd.Series(dtype=object)
         return df
 
-    df = df.copy()
     df["_rank"] = df[COL_STATUS].map(_STATUS_RANK).fillna(3)
     df["_ver"] = df[COL_VERIFIED].map(lambda d: d.toordinal() if d else 0)
     df = df.sort_values(["_rank", "_ver"], ascending=[True, False]).reset_index(drop=True)
 
-    cell = 0.001  # ~110 m: siatka do szybkiego wyszukiwania sąsiadów
     grid: Dict[Tuple[int, int], List[int]] = {}
-    kept: List[int] = []
-    merged: Dict[int, List[int]] = {}
-    for i, row in df.iterrows():
-        lat, lon = row[COL_LAT], row[COL_LON]
-        cx, cy = int(lat / cell), int(lon / cell)
-        match = None
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                for j in grid.get((cx + dx, cy + dy), []):
-                    if has_provider and df.at[j, COL_PROVIDER] == row[COL_PROVIDER]:
-                        continue
-                    if haversine_m(lat, lon, df.at[j, COL_LAT], df.at[j, COL_LON]) <= distance_m:
-                        match = j
-                        break
-                if match is not None:
-                    break
-            if match is not None:
-                break
-        if match is None:
-            grid.setdefault((cx, cy), []).append(i)
-            kept.append(i)
+    merged: Dict[int, List[int]] = {}  # indeks zachowanego rekordu -> indeksy dołączonych duplikatów
+    for i in df.index:
+        winner = _find_duplicate(df, grid, i, distance_m)
+        if winner is None:
+            cell = (int(df.at[i, COL_LAT] / _GRID_CELL), int(df.at[i, COL_LON] / _GRID_CELL))
+            grid.setdefault(cell, []).append(i)
             merged[i] = []
         else:
-            merged[match].append(i)
-
-    def others(i: int) -> Optional[str]:
-        parts = []
-        for j in merged[i]:
-            name = df.at[j, COL_PROVIDER] if has_provider else "inne źródło"
-            parts.append(f"{name} ({df.at[j, COL_ID]})")
-        return "; ".join(parts) if parts else None
+            merged[winner].append(i)
 
     if merge_log is not None:
-        for i in kept:
-            for j in merged[i]:
-                merge_log.append(
-                    {
-                        "provider": df.at[j, COL_PROVIDER] if has_provider else "inne źródło",
-                        "resource": df.at[j, COL_SOURCE_RESOURCE] if COL_SOURCE_RESOURCE in df.columns else None,
-                        "row": df.at[j, "_row"] if "_row" in df.columns else None,
-                        "id": df.at[j, COL_ID],
-                        "winner_provider": df.at[i, COL_PROVIDER] if has_provider else "inne źródło",
-                        "winner_id": df.at[i, COL_ID],
-                    }
-                )
+        merge_log.extend(_merge_log_entry(df, j, i) for i, members in merged.items() for j in members)
+
+    def others(i: int) -> Optional[str]:
+        parts = [f"{_provider_of(df, j)} ({df.at[j, COL_ID]})" for j in merged[i]]
+        return "; ".join(parts) if parts else None
+
+    kept = list(merged)
     result = df.loc[kept].copy()
     result[COL_SOURCES_COUNT] = [1 + len(merged[i]) for i in kept]
     result[COL_OTHER_PROVIDERS] = [others(i) for i in kept]
     return result.drop(columns=["_rank", "_ver"])
 
 
-def compute_freshness(verified: Optional[datetime.date], status: str, today: Optional[datetime.date] = None) -> Tuple[str, Optional[int]]:
+def compute_freshness(
+    verified: Optional[datetime.date], status: str, today: Optional[datetime.date] = None
+) -> Tuple[str, Optional[int]]:
     """Aktualność rekordu na podstawie statusu i daty ostatniej weryfikacji.
 
     nieczynny        - status „nieczynny” (urządzenie nie nadaje się do użycia),
@@ -307,7 +310,11 @@ def build_main_df(
         for item in rejected:
             logger.warning("AED source %s: row %s rejected: %s", meta.get("resource_id"), item["row"], item["reason"])
             if report is not None:
-                report.append(_report_row(meta["provider"], meta.get("resource_id"), item["row"], item["id"], REPORT_REJECTED, item["reason"]))
+                report.append(
+                    _report_row(
+                        meta["provider"], meta.get("resource_id"), item["row"], item["id"], REPORT_REJECTED, item["reason"]
+                    )
+                )
         if clean.empty:
             continue
         clean[COL_PROVIDER] = meta["provider"]
@@ -323,7 +330,10 @@ def build_main_df(
         main_df = deduplicate(pd.concat(frames, ignore_index=True), merge_log=merge_log)
         if report is not None:
             for m in merge_log:
-                reason = f"ten sam punkt (≤ {DEDUP_DISTANCE_METERS} m) co {m['winner_id']} ({m['winner_provider']}); w wykazie zbiorczym zostaje tamten rekord"
+                reason = (
+                    f"ten sam punkt (≤ {DEDUP_DISTANCE_METERS} m) co {m['winner_id']} ({m['winner_provider']}); "
+                    "w wykazie zbiorczym zostaje tamten rekord"
+                )
                 report.append(_report_row(m["provider"], m["resource"], m["row"], m["id"], REPORT_MERGED, reason))
         main_df = main_df.sort_values([COL_PROVIDER, COL_ID]).reset_index(drop=True)
         main_df["Lp."] = range(1, len(main_df) + 1)
@@ -438,7 +448,8 @@ AED_REMOTE_MESSAGES = {
     AED_REMOTE_NO_URL: "Wykaz AED musi wskazywać plik w polu 'url'.",
     AED_REMOTE_NOT_ACCESSIBLE: "Adres w polu 'url' wykazu AED nie odpowiada.",
     AED_REMOTE_BAD_EXTENSION: "Wykaz AED musi wskazywać plik w formacie xls, xlsx lub csv.",
-    AED_REMOTE_BAD_COLUMNS: "Plik wykazu AED musi zawierać dokładnie %d kolumn ułożonych i nazwanych dokładnie: %s." % (len(AED_COLUMNS), ", ".join(AED_COLUMNS)),
+    AED_REMOTE_BAD_COLUMNS: "Plik wykazu AED musi zawierać dokładnie %d kolumn ułożonych i nazwanych dokładnie: %s."
+    % (len(AED_COLUMNS), ", ".join(AED_COLUMNS)),
 }
 
 
@@ -481,7 +492,10 @@ def get_source_resources():
 
 
 def _validation_ok(resource) -> bool:
-    return all(st == "SUCCESS" for st in (resource.data_tasks_last_status, resource.file_tasks_last_status, resource.link_tasks_last_status))
+    return all(
+        st == "SUCCESS"
+        for st in (resource.data_tasks_last_status, resource.file_tasks_last_status, resource.link_tasks_last_status)
+    )
 
 
 def read_source_df(resource) -> pd.DataFrame:

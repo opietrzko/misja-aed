@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -42,8 +41,8 @@ def test_norm_strips_diacritics_and_punctuation():
 def test_parse_coordinate_formats():
     assert parse_coordinate("50,06143") == pytest.approx(50.06143)
     assert parse_coordinate(19.9) == 19.9
-    assert parse_coordinate('50°03\'41"N') == pytest.approx(50 + 3 / 60 + 41 / 3600)
-    assert parse_coordinate('19°56\'12"W') < 0
+    assert parse_coordinate("50°03'41\"N") == pytest.approx(50 + 3 / 60 + 41 / 3600)
+    assert parse_coordinate("19°56'12\"W") < 0
     assert parse_coordinate("abc") is None and parse_coordinate("") is None and parse_coordinate(None) is None
 
 
@@ -63,8 +62,17 @@ def test_pl1992_conversion_and_axis_order_is_explicit():
 
 
 def test_pl1992_north_first_option_flips_axes():
-    df = pd.DataFrame({"Y": ["244266,77"], "X": ["566859,11"], "Nr": ["1"], "Godziny": ["całą dobę"], "Stan": ["sprawny"],
-                       "Dostęp": ["tak"], "Data przeglądu": ["14.11.2026"]})
+    df = pd.DataFrame(
+        {
+            "Y": ["244266,77"],
+            "X": ["566859,11"],
+            "Nr": ["1"],
+            "Godziny": ["całą dobę"],
+            "Stan": ["sprawny"],
+            "Dostęp": ["tak"],
+            "Data przeglądu": ["14.11.2026"],
+        }
+    )
     out, _, _ = convert_dataframe(df, pl1992_north_first=True)
     assert out.iloc[0][COL_LAT] == pytest.approx(50.0619, abs=1e-3)
 
@@ -77,7 +85,13 @@ def test_parse_date_iso_and_polish():
 
 @pytest.mark.parametrize(
     "value,hours,expected",
-    [("całą dobę", None, "całodobowo"), (None, "24/7", "całodobowo"), (None, "Mo-Fr 8-16", "w godzinach"), ("ograniczona", None, "ograniczona"), ("tak", None, None)],
+    [
+        ("całą dobę", None, "całodobowo"),
+        (None, "24/7", "całodobowo"),
+        (None, "Mo-Fr 8-16", "w godzinach"),
+        ("ograniczona", None, "ograniczona"),
+        ("tak", None, None),
+    ],
 )
 def test_normalize_availability(value, hours, expected):
     assert normalize_availability(value, hours) == expected
@@ -85,13 +99,22 @@ def test_normalize_availability(value, hours, expected):
 
 @pytest.mark.parametrize(
     "value,expected",
-    [("yes", "swobodny"), ("customers", "za zgodą"), ("private", "zamknięte na klucz"), ("nie", "zamknięte na klucz"), ("nowy", None), (None, None)],
+    [
+        ("yes", "swobodny"),
+        ("customers", "za zgodą"),
+        ("private", "zamknięte na klucz"),
+        ("nie", "zamknięte na klucz"),
+        ("nowy", None),
+        (None, None),
+    ],
 )
 def test_normalize_access(value, expected):
     assert normalize_access(value) == expected
 
 
-@pytest.mark.parametrize("value,expected", [("sprawny", "czynny"), ("uszkodzony", "nieczynny"), ("do sprawdzenia", "do weryfikacji"), ("???", None)])
+@pytest.mark.parametrize(
+    "value,expected", [("sprawny", "czynny"), ("uszkodzony", "nieczynny"), ("do sprawdzenia", "do weryfikacji"), ("???", None)]
+)
 def test_normalize_status(value, expected):
     assert normalize_status(value) == expected
 
@@ -178,7 +201,9 @@ def test_availability_typo_tolerance_does_not_touch_real_hours():
 
 def test_address_only_rows_are_rejected_with_actionable_reason():
     df = pd.DataFrame({"Obiekt": ["szkoła"], "Adres": ["ul. Paradna 36, 93-345 Łódź"], "Godz. dostępu": ["caołobowo"]})
-    out, report, _ = convert_dataframe(df, defaults={COL_VERIFIED: "2026-11-20", COL_ACCESS: "za zgodą", COL_STATUS: "do weryfikacji"})
+    out, report, _ = convert_dataframe(
+        df, defaults={COL_VERIFIED: "2026-11-20", COL_ACCESS: "za zgodą", COL_STATUS: "do weryfikacji"}
+    )
     assert len(out) == 0
     assert report[0]["wynik"] == "odrzucono"
     assert "brak współrzędnych (jest adres)" in report[0]["szczegoly"] and "geokoduje" in report[0]["szczegoly"]

@@ -36,7 +36,12 @@ class Command(BaseCommand):
         df = read_any(opts["input"])
         profile = load_profile(opts["profile"]) if opts["profile"] else None
         defaults = {}
-        for key, col in (("data_zrodla", COL_VERIFIED), ("dostepnosc", COL_AVAILABILITY), ("dostep", COL_ACCESS), ("status", COL_STATUS)):
+        for key, col in (
+            ("data_zrodla", COL_VERIFIED),
+            ("dostepnosc", COL_AVAILABILITY),
+            ("dostep", COL_ACCESS),
+            ("status", COL_STATUS),
+        ):
             if opts.get(key):
                 defaults[col] = opts[key]
 
@@ -55,6 +60,8 @@ class Command(BaseCommand):
         pd.DataFrame(report).to_csv(report_path, index=False)
 
         stats = pd.Series([r["wynik"] for r in report]).value_counts().to_dict()
-        self.stdout.write(self.style.SUCCESS(f"Gotowe: {len(out)} z {len(df)} wierszy. {stats}. Plik: {out_path}, raport: {report_path}"))
+        self.stdout.write(
+            self.style.SUCCESS(f"Gotowe: {len(out)} z {len(df)} wierszy. {stats}. Plik: {out_path}, raport: {report_path}")
+        )
         if len(out) == 0:
             raise CommandError("Żaden wiersz nie przeszedł walidacji, sprawdź raport i wartości domyślne.")

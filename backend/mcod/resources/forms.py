@@ -351,8 +351,7 @@ class ResourceForm(forms.ModelForm, HighValueDataFormValidatorMixin):
             if not is_main_dga_resource and organization:
                 self._remove_dga_flag_from_current_dga_resource_if_needed(data, organization)
 
-        if data.get("contains_aed_list") == "True":
-            self._validate_aed_list(data, organization, creating_resource, contains_protected_data)
+        self._validate_aed_list(data, organization, creating_resource, contains_protected_data)
 
         self.validate_high_value_data_flags_conflict(data)
         if organization:
@@ -367,48 +366,57 @@ class ResourceForm(forms.ModelForm, HighValueDataFormValidatorMixin):
         contains_protected_data: bool,
     ) -> None:
         """Walidacja wykazu AED - odpowiednik walidacji wykazu DGA (kolumny, jeden wykaz na instytucję)."""
-        if contains_protected_data:
-            self.add_error("contains_aed_list", "Zasób nie może być jednocześnie wykazem DGA i wykazem AED.")
+        if data.get("contains_aed_list") != "True":
             return
-        if data.get("link"):
-            self.add_error("link", "Wykaz AED musi być plikiem csv, xls lub xlsx wybranym z dysku, a nie linkiem.")
+        problem = self._aed_list_problem(data, creating_resource, contains_protected_data)
+        if problem:
+            self.add_error(*problem)
             return
+        self._validate_one_aed_list_per_institution(organization)
 
+    def _aed_list_file(self, data: Dict[str, Any], creating_resource: bool):
         file = data.get("file")
         if not file and not creating_resource:
             main_file = self.instance.main_file
             file = create_uploaded_file_from_path(main_file.path) if main_file else None
-        if not file:
-            self.add_error("contains_aed_list", "Wskaż plik csv, xls lub xlsx z wykazem AED.")
-            return
+        return file
 
+    def _aed_list_problem(self, data: Dict[str, Any], creating_resource: bool, contains_protected_data: bool):
+        """Zwraca (pole, komunikat) pierwszego problemu z plikiem wykazu AED albo None."""
+        if contains_protected_data:
+            return "contains_aed_list", "Zasób nie może być jednocześnie wykazem DGA i wykazem AED."
+        if data.get("link"):
+            return "link", "Wykaz AED musi być plikiem csv, xls lub xlsx wybranym z dysku, a nie linkiem."
+        file = self._aed_list_file(data, creating_resource)
+        if not file:
+            return "contains_aed_list", "Wskaż plik csv, xls lub xlsx z wykazem AED."
         extension = os.path.splitext(getattr(file, "name", "") or "")[1].lstrip(".").lower()
         if extension not in AED_RESOURCE_EXTENSIONS:
-            self.add_error("contains_aed_list", "Wykaz AED musi być w formacie csv, xls lub xlsx.")
-            return
+            return "contains_aed_list", "Wykaz AED musi być w formacie csv, xls lub xlsx."
         if not validate_aed_file_columns(file, extension):
-            self.add_error(
+            columns = ", ".join(AED_COLUMNS)
+            return (
                 "contains_aed_list",
-                "Wykaz AED może zawierać wyłącznie kolumny o podanych nazwach i w tej kolejności: "
-                + ", ".join(AED_COLUMNS)
-                + ".",
+                f"Wykaz AED może zawierać wyłącznie kolumny o podanych nazwach i w tej kolejności: {columns}.",
             )
-            return
         if hasattr(file, "seek"):
             file.seek(0)
+        return None
 
-        if organization:
-            try:
-                current = get_aed_resource_for_institution(organization.pk, self.instance.pk or None)
-            except MultipleObjectsReturned:
-                self.add_error("contains_aed_list", "Instytucja ma więcej niż jeden wykaz AED.")
-                return
-            if current:
-                self.add_error(
-                    "contains_aed_list",
-                    f"Instytucja ma już wykaz AED (zasób: {current.title}). Zaktualizuj istniejący zasób "
-                    "albo odznacz go jako wykaz AED.",
-                )
+    def _validate_one_aed_list_per_institution(self, organization: Optional[Organization]) -> None:
+        if not organization:
+            return
+        try:
+            current = get_aed_resource_for_institution(organization.pk, self.instance.pk or None)
+        except MultipleObjectsReturned:
+            self.add_error("contains_aed_list", "Instytucja ma więcej niż jeden wykaz AED.")
+            return
+        if current:
+            self.add_error(
+                "contains_aed_list",
+                f"Instytucja ma już wykaz AED (zasób: {current.title}). Zaktualizuj istniejący zasób "
+                "albo odznacz go jako wykaz AED.",
+            )
 
     def _validate_data_date(self, data: dict) -> None:
         data_date_err = Resource.get_auto_data_date_errors(data)

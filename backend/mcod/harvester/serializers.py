@@ -21,11 +21,15 @@ from marshmallow import (
 )
 from marshmallow.fields import URL, UUID, Bool, Date, DateTime, Int, List, Method, Nested, Raw, Str
 
+from mcod.aed.utils import (
+    AED_REMOTE_MESSAGES,
+    check_remote_aed_file,
+    get_aed_resource_for_institution,
+)
 from mcod.core.api import fields
 from mcod.core.api.rdf.profiles.dcat_ap import DCATDatasetDeserializer
 from mcod.core.serializers import CSVSerializer
 from mcod.datasets.models import Dataset
-from mcod.aed.utils import AED_REMOTE_MESSAGES, check_remote_aed_file, get_aed_resource_for_institution
 from mcod.harvester.schema_utils import get_and_validate_resource_format_from_response
 from mcod.lib.metadata_validators import (
     validate_conflicting_high_value_data_flags,
@@ -679,7 +683,6 @@ class XMLResourceSchema(ResourceMixin, XMLPreProcessedSchema):
                             "with a value equal to true. Resource: 'title' = %(title)s, 'id' = %(id)s."
                         ) % {"field_name": "containsProtectedData", "title": resource_dga_db.title, "id": resource_dga_db.pk}
                         raise ValidationError(message=msg_institution_owns_dga, field_name=field_name)
-
 
     @validates_schema
     def validate_contains_aed_list(self, data, **kwargs):

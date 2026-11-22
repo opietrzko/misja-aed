@@ -1,6 +1,7 @@
 import os
 import tempfile
 import uuid
+from typing import Dict, Optional
 
 import pandas as pd
 from django.contrib import admin
@@ -30,73 +31,93 @@ def _context(request, **extra):
     return ctx
 
 
-@require_http_methods(["GET", "POST"])
-def converter_view(request):
-    if request.method == "GET":
-        return render(request, "admin/aed/converter.html", _context(request))
+TEMPLATE = "admin/aed/converter.html"
+DEFAULT_FIELDS = (
+    ("data_zrodla", COL_VERIFIED),
+    ("dostepnosc", COL_AVAILABILITY),
+    ("dostep", COL_ACCESS),
+    ("status", COL_STATUS),
+)
 
-    upload = request.FILES.get("plik")
-    ext = os.path.splitext(upload.name)[1].lower() if upload else ""
+
+def _upload_error(upload) -> Optional[str]:
+    """Komunikat o błędzie wgranego pliku albo None, gdy plik można konwertować."""
     if not upload:
-        return render(request, "admin/aed/converter.html", _context(request, error="Wybierz plik do konwersji."))
-    if ext not in ALLOWED_EXTENSIONS:
-        return render(request, "admin/aed/converter.html", _context(request, error="Dozwolone formaty: csv, xlsx, xls, json, geojson."))
+        return "Wybierz plik do konwersji."
+    if os.path.splitext(upload.name)[1].lower() not in ALLOWED_EXTENSIONS:
+        return "Dozwolone formaty: csv, xlsx, xls, json, geojson."
     if upload.size > MAX_UPLOAD_BYTES:
-        return render(request, "admin/aed/converter.html", _context(request, error="Plik jest za duży (limit 5 MB)."))
+        return "Plik jest za duży (limit 5 MB)."
+    return None
 
-    profile_name = request.POST.get("profil") or ""
-    if profile_name and profile_name not in _profiles():
-        return render(request, "admin/aed/converter.html", _context(request, error="Nieznany profil źródła."))
 
-    defaults = {}
-    for field, col in (("data_zrodla", COL_VERIFIED), ("dostepnosc", COL_AVAILABILITY), ("dostep", COL_ACCESS), ("status", COL_STATUS)):
-        value = (request.POST.get(field) or "").strip()
-        if value:
-            defaults[col] = value
+def _defaults_from_post(post) -> Dict[str, str]:
+    values = {col: (post.get(field) or "").strip() for field, col in DEFAULT_FIELDS}
+    return {col: value for col, value in values.items() if value}
 
-    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+
+def _convert_upload(upload, profile_name: str, defaults: Dict[str, str], north_first: bool):
+    """Zapisuje plik tymczasowo, konwertuje i sprząta. Zwraca (df, out, report, mapping, profile)."""
+    with tempfile.NamedTemporaryFile(suffix=os.path.splitext(upload.name)[1].lower(), delete=False) as tmp:
         for chunk in upload.chunks():
             tmp.write(chunk)
         path = tmp.name
     try:
         df = read_any(path)
         profile = load_profile(profile_name) if profile_name else None
-        out, report, mapping = convert_dataframe(df, profile, defaults, "AED", request.POST.get("osie_pn") == "on")
-    except Exception as exc:  # noqa: BLE001  (niepoprawny plik użytkownika)
-        return render(request, "admin/aed/converter.html", _context(request, error=f"Nie udało się odczytać pliku: {exc}"))
+        out, report, mapping = convert_dataframe(df, profile, defaults, "AED", north_first)
     finally:
         os.unlink(path)
+    return df, out, report, mapping, profile
 
+
+def _result_context(request, upload, df, out, report, mapping, profile, defaults):
     key = uuid.uuid4().hex
     cache.set(f"aed-conv-{key}-wynik", main_df_to_csv_bytes(out), CACHE_SECONDS)
     cache.set(f"aed-conv-{key}-raport", pd.DataFrame(report).to_csv(index=False).encode("utf-8"), CACHE_SECONDS)
-
     counts = pd.Series([r["wynik"] for r in report]).value_counts().to_dict() if report else {}
     mapped = [
         {"cel": target, "zrodlo": ", ".join(m.sources), "metoda": m.method, "pewnosc": int(round(m.confidence * 100))}
         for target, m in mapping.columns.items()
     ]
-    return render(
+    return _context(
         request,
-        "admin/aed/converter.html",
-        _context(
-            request,
-            result=True,
-            key=key,
-            filename=upload.name,
-            total=len(df),
-            converted=len(out),
-            counts=counts,
-            mapped=mapped,
-            pl1992=mapping.pl1992,
-            combined_point=mapping.combined_point,
-            missing=mapping.missing_required({**((profile or {}).get("defaults") or {}), **defaults}),
-            report=report[:REPORT_ROWS_SHOWN],
-            report_truncated=len(report) > REPORT_ROWS_SHOWN,
-            preview=out.head(15).fillna("").values.tolist(),
-            preview_columns=list(out.columns),
-        ),
+        result=True,
+        key=key,
+        filename=upload.name,
+        total=len(df),
+        converted=len(out),
+        counts=counts,
+        mapped=mapped,
+        pl1992=mapping.pl1992,
+        combined_point=mapping.combined_point,
+        missing=mapping.missing_required({**((profile or {}).get("defaults") or {}), **defaults}),
+        report=report[:REPORT_ROWS_SHOWN],
+        report_truncated=len(report) > REPORT_ROWS_SHOWN,
+        preview=out.head(15).fillna("").values.tolist(),
+        preview_columns=list(out.columns),
     )
+
+
+@require_http_methods(["GET", "POST"])
+def converter_view(request):
+    if request.method == "GET":
+        return render(request, TEMPLATE, _context(request))
+
+    upload = request.FILES.get("plik")
+    profile_name = request.POST.get("profil") or ""
+    error = _upload_error(upload)
+    if error is None and profile_name and profile_name not in _profiles():
+        error = "Nieznany profil źródła."
+    if error:
+        return render(request, TEMPLATE, _context(request, error=error))
+
+    defaults = _defaults_from_post(request.POST)
+    try:
+        df, out, report, mapping, profile = _convert_upload(upload, profile_name, defaults, request.POST.get("osie_pn") == "on")
+    except Exception as exc:  # noqa: BLE001  (niepoprawny plik użytkownika)
+        return render(request, TEMPLATE, _context(request, error=f"Nie udało się odczytać pliku: {exc}"))
+    return render(request, TEMPLATE, _result_context(request, upload, df, out, report, mapping, profile, defaults))
 
 
 def download_view(request, key, kind):

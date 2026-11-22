@@ -21,19 +21,39 @@ from mcod.aed.constants import (
 DESCRIPTIONS = {
     "Lp.": ("Liczba porządkowa wiersza.", "tak", "1"),
     "Identyfikator AED": ("Unikalny identyfikator urządzenia nadany przez dysponenta.", "tak", "KRK-0001"),
-    "Szerokość geograficzna": ("WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 48.9–55.0).", "tak", "50.06143"),
-    "Długość geograficzna": ("WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 14.0–24.2).", "tak", "19.93658"),
+    "Szerokość geograficzna": (
+        "WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 48.9–55.0).",
+        "tak",
+        "50.06143",
+    ),
+    "Długość geograficzna": (
+        "WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 14.0–24.2).",
+        "tak",
+        "19.93658",
+    ),
     "Miejscowość": ("Nazwa miejscowości.", "zalecane", "Kraków"),
     "Ulica i numer": ("Adres budynku lub miejsca.", "zalecane", "ul. Floriańska 1"),
     "Kod TERYT gminy": ("7-cyfrowy kod TERYT gminy (powiązanie z regionami w portalu).", "zalecane", "1261011"),
-    "Opis lokalizacji": ("Gdzie dokładnie jest urządzenie (piętro, wejście, portiernia).", "zalecane", "hol główny, przy recepcji"),
+    "Opis lokalizacji": (
+        "Gdzie dokładnie jest urządzenie (piętro, wejście, portiernia).",
+        "zalecane",
+        "hol główny, przy recepcji",
+    ),
     "Rodzaj obiektu": ("Typ miejsca: urząd, szkoła, dworzec, galeria, przestrzeń publiczna…", "zalecane", "urząd"),
     "Dostępność": ("Jedna z wartości: " + ", ".join(AVAILABILITY_VALUES) + ".", "tak", "w godzinach"),
     "Godziny dostępności": ("Np. „pn–pt 7:30–16:00”; dla „całodobowo” puste.", "jeśli w godzinach", "pn–pt 7:30–16:00"),
     "Sposób dostępu": ("Jedna z wartości: " + ", ".join(ACCESS_VALUES) + ".", "tak", "swobodny"),
     "Status urządzenia": ("Jedna z wartości: " + ", ".join(STATUS_VALUES) + ".", "tak", "czynny"),
-    "Data ostatniej weryfikacji": ("Kiedy dysponent ostatnio potwierdził urządzenie i jego stan (RRRR-MM-DD).", "tak", "2026-11-01"),
-    "Kontakt instytucjonalny": ("Adres e-mail lub telefon instytucji (bez danych osób fizycznych).", "zalecane", "bhp@urzad.example.pl"),
+    "Data ostatniej weryfikacji": (
+        "Kiedy dysponent ostatnio potwierdził urządzenie i jego stan (RRRR-MM-DD).",
+        "tak",
+        "2026-11-01",
+    ),
+    "Kontakt instytucjonalny": (
+        "Adres e-mail lub telefon instytucji (bez danych osób fizycznych).",
+        "zalecane",
+        "bhp@urzad.example.pl",
+    ),
 }
 
 
@@ -44,7 +64,10 @@ AGGREGATE_NOTES = {
     "Data aktualizacji zasobu źródłowego": "wyliczana: data danych zasobu źródłowego",
     "Liczba źródeł": "wyliczana: ile wykazów zgłosiło to samo urządzenie (punkty różnych dysponentów bliżej niż 25 m)",
     "Pozostali dysponenci": "wyliczana: pozostali dysponenci tego urządzenia w formie „Dysponent (identyfikator); …”",
-    "Aktualność": "wyliczana: nieczynny / nieaktualny (weryfikacja starsza niż 2 lata) / do weryfikacji (starsza niż rok, status „do weryfikacji” lub data z przyszłości) / aktualny",
+    "Aktualność": (
+        "wyliczana: nieczynny / nieaktualny (weryfikacja starsza niż 2 lata) / do weryfikacji "
+        "(starsza niż rok, status „do weryfikacji” lub data z przyszłości) / aktualny"
+    ),
     "Dni od ostatniej weryfikacji": "wyliczana: liczba dni od daty ostatniej weryfikacji do dnia scalenia",
 }
 

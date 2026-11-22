@@ -18,8 +18,8 @@ from mcod.aed.constants import (
     MAIN_AED_COLUMNS,
 )
 from mcod.aed.utils import (
-    apply_aed_geo_schema,
     AEDMissingRequiredColumnError,
+    apply_aed_geo_schema,
     build_main_df,
     build_report_df,
     check_row,
@@ -109,7 +109,15 @@ def test_build_main_df_adds_provider_and_scope():
     b = make_df(make_row(**{"Identyfikator AED": "B-1", "Szerokość geograficzna": 52.2, "Długość geograficzna": 21.0}))
     main = build_main_df(
         [
-            (a, {"provider": "Miasto Kraków", "scope": "AED w budynkach miasta", "resource_id": 1, "data_date": datetime.date(2026, 11, 1)}),
+            (
+                a,
+                {
+                    "provider": "Miasto Kraków",
+                    "scope": "AED w budynkach miasta",
+                    "resource_id": 1,
+                    "data_date": datetime.date(2026, 11, 1),
+                },
+            ),
             (b, {"provider": "Fundacja X", "scope": "AED w Warszawie", "resource_id": 2, "data_date": None}),
         ]
     )
@@ -151,14 +159,20 @@ def _with_provider(rows, provider):
 def test_dedup_lists_all_other_providers():
     a = _with_provider([make_row(**{"Identyfikator AED": "A-1"})], "Urząd")
     b = _with_provider([make_row(**{"Identyfikator AED": "B-1", "Szerokość geograficzna": 50.06003})], "Fundacja")
-    c = _with_provider([make_row(**{"Identyfikator AED": "C-1", "Szerokość geograficzna": 50.06004, "Status urządzenia": "do weryfikacji"})], "Straż")
+    c = _with_provider(
+        [make_row(**{"Identyfikator AED": "C-1", "Szerokość geograficzna": 50.06004, "Status urządzenia": "do weryfikacji"})],
+        "Straż",
+    )
     clean, _ = sanitize_source_df(pd.concat([a, b, c], ignore_index=True))
     result = deduplicate(clean)
     assert len(result) == 1
     row = result.iloc[0]
     assert row[COL_SOURCES_COUNT] == 3
     assert "(" in row[COL_OTHER_PROVIDERS] and row[COL_OTHER_PROVIDERS].count(";") == 1  # dwóch pozostałych dysponentów
-    assert {"Urząd", "Fundacja", "Straż"} == {row[COL_PROVIDER], *[p.split(" (")[0] for p in row[COL_OTHER_PROVIDERS].split("; ")]}
+    assert {"Urząd", "Fundacja", "Straż"} == {
+        row[COL_PROVIDER],
+        *[p.split(" (")[0] for p in row[COL_OTHER_PROVIDERS].split("; ")],
+    }
 
 
 def test_dedup_does_not_merge_two_devices_of_same_provider():
@@ -192,7 +206,17 @@ def test_compute_freshness(verified, status, expected, days):
 
 
 def test_build_main_df_adds_freshness_columns():
-    df = make_df(make_row(**{"Data ostatniej weryfikacji": "2026-11-01"}), make_row(**{"Identyfikator AED": "B", "Szerokość geograficzna": 52.2, "Długość geograficzna": 21.0, "Data ostatniej weryfikacji": "2023-01-01"}))
+    df = make_df(
+        make_row(**{"Data ostatniej weryfikacji": "2026-11-01"}),
+        make_row(
+            **{
+                "Identyfikator AED": "B",
+                "Szerokość geograficzna": 52.2,
+                "Długość geograficzna": 21.0,
+                "Data ostatniej weryfikacji": "2023-01-01",
+            }
+        ),
+    )
     main = build_main_df([(df, {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})], today=TODAY)
     by_id = main.set_index(COL_ID)
     assert by_id.loc["A-1", COL_FRESHNESS] == "aktualny" and by_id.loc["A-1", COL_DAYS_SINCE] == 21
@@ -200,7 +224,9 @@ def test_build_main_df_adds_freshness_columns():
 
 
 def test_report_lists_rejected_rows_and_merged_duplicates():
-    a = make_df(make_row(**{"Identyfikator AED": "A-1"}), make_row(**{"Identyfikator AED": "A-2", "Status urządzenia": "zepsuty"}))
+    a = make_df(
+        make_row(**{"Identyfikator AED": "A-1"}), make_row(**{"Identyfikator AED": "A-2", "Status urządzenia": "zepsuty"})
+    )
     b = make_df(make_row(**{"Identyfikator AED": "B-1", "Szerokość geograficzna": 50.06003}))
     report = []
     main = build_main_df(

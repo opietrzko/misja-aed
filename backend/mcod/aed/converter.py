@@ -72,7 +72,19 @@ SYNONYMS: Dict[str, List[str]] = {
     COL_LOCATION: ["opis lokalizacji", "lokalizacja", "opis miejsca", "miejsce", "location", "umiejscowienie", "gdzie", "opis"],
     COL_OBJECT_TYPE: ["rodzaj obiektu", "typ obiektu", "obiekt", "rodzaj", "kategoria", "object type"],
     COL_AVAILABILITY: ["dostepnosc", "availability", "czas dostepnosci"],
-    COL_HOURS: ["godziny dostepnosci", "godziny", "godziny otwarcia", "opening hours", "godziny pracy", "godz dostepu", "godziny dostepu", "godz dostepnosci", "godz otwarcia", "godz", "czas pracy"],
+    COL_HOURS: [
+        "godziny dostepnosci",
+        "godziny",
+        "godziny otwarcia",
+        "opening hours",
+        "godziny pracy",
+        "godz dostepu",
+        "godziny dostepu",
+        "godz dostepnosci",
+        "godz otwarcia",
+        "godz",
+        "czas pracy",
+    ],
     COL_ACCESS: ["sposob dostepu", "dostep", "access", "rodzaj dostepu"],
     COL_STATUS: ["status urzadzenia", "status", "stan", "stan urzadzenia", "sprawnosc"],
     COL_VERIFIED: [
@@ -208,8 +220,10 @@ def normalize_availability(value: Any, hours: Any = None) -> Optional[str]:
         return "całodobowo"
     # literówki w pojedynczym słowie, np. "caołobowo": tylko dla wartości bez cyfr (nie dla godzin typu 8.00-18.00)
     for part in (text, h):
-        if part and not any(ch.isdigit() for ch in part) and difflib.get_close_matches(
-            part.replace(" ", ""), ["calodobowo", "calodobowe", "calodobowy"], n=1, cutoff=0.8
+        if (
+            part
+            and not any(ch.isdigit() for ch in part)
+            and difflib.get_close_matches(part.replace(" ", ""), ["calodobowo", "calodobowe", "calodobowy"], n=1, cutoff=0.8)
         ):
             return "całodobowo"
     if "ograniczon" in text:
@@ -277,7 +291,9 @@ class Mapping:
 
     def as_dict(self) -> Dict[str, Any]:
         return {
-            "columns": {k: {"zrodlo": v.sources, "pewnosc": round(v.confidence, 2), "metoda": v.method} for k, v in self.columns.items()},
+            "columns": {
+                k: {"zrodlo": v.sources, "pewnosc": round(v.confidence, 2), "metoda": v.method} for k, v in self.columns.items()
+            },
             "pl1992": list(self.pl1992) if self.pl1992 else None,
             "pojedyncza_kolumna_punktu": self.combined_point,
         }
@@ -309,48 +325,60 @@ def load_profile(name_or_path: str) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def map_columns(df: pd.DataFrame, profile: Optional[Dict[str, Any]] = None) -> Mapping:
-    mapping = Mapping()
-    used: set = set()
-    columns = list(df.columns)
+def _names_for(target: str) -> set:
+    return {norm(target), *SYNONYMS.get(target, [])}
 
-    # 1) profil źródła (jawna konfiguracja; wartość może być listą kandydatów)
+
+def _assign(mapping: Mapping, used: set, target: str, sources: List[str], confidence: float, method: str) -> None:
+    mapping.columns[target] = ColumnMatch(list(sources), confidence, method)
+    used.update(sources)
+
+
+def _first_free_column(columns: List[Any], used: set, predicate) -> Optional[Any]:
+    return next((c for c in columns if c not in used and predicate(c)), None)
+
+
+def _map_by_profile(mapping: Mapping, used: set, columns: List[Any], profile: Optional[Dict[str, Any]]) -> None:
+    """Profil źródła: jawna konfiguracja, wartość może być listą kandydatów."""
     for target, spec in ((profile or {}).get("columns") or {}).items():
         candidates = [spec] if isinstance(spec, str) else list(spec)
         found = [c for c in candidates if c in columns]
         if found:
-            mapping.columns[target] = ColumnMatch(found, 1.0, "profil")
-            used.update(found)
+            _assign(mapping, used, target, found, 1.0, "profil")
 
-    # 2) dokładna nazwa lub synonim
+
+def _map_by_name(mapping: Mapping, used: set, columns: List[Any]) -> None:
+    """Dokładna nazwa lub synonim."""
     for target in TARGET_COLUMNS:
         if target in mapping.columns:
             continue
-        names = {norm(target), *SYNONYMS.get(target, [])}
-        for col in columns:
-            if col not in used and norm(col) in names:
-                mapping.columns[target] = ColumnMatch([col], 1.0, "nazwa")
-                used.add(col)
-                break
+        names = _names_for(target)
+        col = _first_free_column(columns, used, lambda c: norm(c) in names)
+        if col is not None:
+            _assign(mapping, used, target, [col], 1.0, "nazwa")
 
-    # 2b) nazwa zaczyna się od synonimu (np. "lokalizacja w budynku" -> opis lokalizacji)
+
+def _map_by_prefix(mapping: Mapping, used: set, columns: List[Any]) -> None:
+    """Nazwa zaczyna się od synonimu (np. "lokalizacja w budynku" -> opis lokalizacji)."""
     for target in TARGET_COLUMNS:
         if target in mapping.columns:
             continue
-        for col in columns:
-            n = norm(col)
-            if col not in used and any(len(name) >= 5 and n.startswith(name + " ") for name in SYNONYMS.get(target, [])):
-                mapping.columns[target] = ColumnMatch([col], 0.85, "prefiks nazwy")
-                used.add(col)
-                break
+        synonyms = SYNONYMS.get(target, [])
+        col = _first_free_column(columns, used, lambda c: any(len(n) >= 5 and norm(c).startswith(n + " ") for n in synonyms))
+        if col is not None:
+            _assign(mapping, used, target, [col], 0.85, "prefiks nazwy")
 
-    # 3) podobieństwo nazw: wszystkie pary naraz, przydział od najlepszego wyniku
-    #    (inaczej "Godz. dostępu" trafiałoby do "Sposobu dostępu" tylko dlatego, że ta kolumna wzorca jest wcześniej)
+
+def _map_by_similarity(mapping: Mapping, used: set, columns: List[Any]) -> None:
+    """Podobieństwo nazw: wszystkie pary naraz, przydział od najlepszego wyniku.
+
+    Inaczej "Godz. dostępu" trafiałoby do "Sposobu dostępu" tylko dlatego, że ta kolumna wzorca jest wcześniej.
+    """
     pairs = []
     for target in TARGET_COLUMNS:
         if target in mapping.columns:
             continue
-        names = {norm(target), *SYNONYMS.get(target, [])}
+        names = _names_for(target)
         for col in columns:
             if col in used:
                 continue
@@ -358,41 +386,58 @@ def map_columns(df: pd.DataFrame, profile: Optional[Dict[str, Any]] = None) -> M
             if ratio >= FUZZY_THRESHOLD:
                 pairs.append((ratio, target, col))
     for ratio, target, col in sorted(pairs, key=lambda x: -x[0]):
-        if target in mapping.columns or col in used:
-            continue
-        mapping.columns[target] = ColumnMatch([col], ratio, "podobieństwo")
-        used.add(col)
+        if target not in mapping.columns and col not in used:
+            _assign(mapping, used, target, [col], ratio, "podobieństwo")
 
-    # 4) po zawartości
+
+_CONTENT_RULES = (
+    (COL_LAT, lambda series: _numeric_fraction(series, in_lat) >= 0.8),
+    (COL_LON, lambda series: _numeric_fraction(series, in_lon) >= 0.8),
+    (COL_VERIFIED, lambda series: _date_fraction(series) >= 0.8),
+)
+
+
+def _map_by_content(mapping: Mapping, used: set, columns: List[Any], df: pd.DataFrame) -> None:
+    """Po zawartości kolumny: zakres współrzędnych, daty."""
     for col in columns:
         if col in used:
             continue
-        series = df[col]
-        if COL_LAT not in mapping.columns and _numeric_fraction(series, in_lat) >= 0.8:
-            mapping.columns[COL_LAT] = ColumnMatch([col], 0.7, "zawartość")
-            used.add(col)
-        elif COL_LON not in mapping.columns and _numeric_fraction(series, in_lon) >= 0.8:
-            mapping.columns[COL_LON] = ColumnMatch([col], 0.7, "zawartość")
-            used.add(col)
-        elif COL_VERIFIED not in mapping.columns and _date_fraction(series) >= 0.8:
-            mapping.columns[COL_VERIFIED] = ColumnMatch([col], 0.7, "zawartość")
-            used.add(col)
-
-    # 5) współrzędne w innym zapisie: pojedyncza kolumna albo układ PL-1992
-    if COL_LAT not in mapping.columns or COL_LON not in mapping.columns:
-        for col in columns:
-            if col in used:
-                continue
-            vals = [v for v in df[col] if not _blank(v)]
-            if vals and sum(1 for v in vals if parse_point(v)) / len(vals) >= 0.8:
-                mapping.combined_point = col
-                used.add(col)
+        for target, test in _CONTENT_RULES:
+            if target not in mapping.columns and test(df[col]):
+                _assign(mapping, used, target, [col], 0.7, "zawartość")
                 break
-        if not mapping.combined_point:
-            big = [c for c in columns if c not in used and _numeric_fraction(df[c], lambda n: 1e5 <= n <= 1e6) >= 0.8]
-            if len(big) >= 2:
-                mapping.pl1992 = (big[0], big[1])
-                used.update(big[:2])
+
+
+def _is_point_column(series: pd.Series) -> bool:
+    vals = [v for v in series if not _blank(v)]
+    return bool(vals) and sum(1 for v in vals if parse_point(v)) / len(vals) >= 0.8
+
+
+def _map_other_coordinates(mapping: Mapping, used: set, columns: List[Any], df: pd.DataFrame) -> None:
+    """Współrzędne w innym zapisie: pojedyncza kolumna albo układ PL-1992."""
+    if COL_LAT in mapping.columns and COL_LON in mapping.columns:
+        return
+    point_col = _first_free_column(columns, used, lambda c: _is_point_column(df[c]))
+    if point_col is not None:
+        mapping.combined_point = point_col
+        used.add(point_col)
+        return
+    big = [c for c in columns if c not in used and _numeric_fraction(df[c], lambda n: 1e5 <= n <= 1e6) >= 0.8]
+    if len(big) >= 2:
+        mapping.pl1992 = (big[0], big[1])
+        used.update(big[:2])
+
+
+def map_columns(df: pd.DataFrame, profile: Optional[Dict[str, Any]] = None) -> Mapping:
+    mapping = Mapping()
+    used: set = set()
+    columns = list(df.columns)
+    _map_by_profile(mapping, used, columns, profile)
+    _map_by_name(mapping, used, columns)
+    _map_by_prefix(mapping, used, columns)
+    _map_by_similarity(mapping, used, columns)
+    _map_by_content(mapping, used, columns, df)
+    _map_other_coordinates(mapping, used, columns, df)
     return mapping
 
 
@@ -411,6 +456,88 @@ def _first_value(row: pd.Series, match: Optional[ColumnMatch]) -> Any:
     return None
 
 
+ADDRESS_ONLY_ERROR = (
+    "brak współrzędnych (jest adres). Konwerter nie geokoduje adresów; na dane.gov.pl portal potrafi je "
+    "wyliczyć własnym geokoderem, w środowisku lokalnym niedostępnym. Uzupełnij współrzędne u dysponenta"
+)
+
+
+def _coordinates_from_alternatives(raw: pd.Series, mapping: Mapping, lat, lon, notes: List[str]):
+    """Gdy brak lat/lon w osobnych kolumnach: pojedyncza kolumna punktu albo układ PL-1992."""
+    if mapping.combined_point:
+        pt = parse_point(raw.get(mapping.combined_point))
+        if pt:
+            notes.append("współrzędne z jednej kolumny")
+            return pt
+    if mapping.pl1992:
+        a, b = parse_coordinate(raw.get(mapping.pl1992[0])), parse_coordinate(raw.get(mapping.pl1992[1]))
+        pt = from_pl1992(a, b) if a is not None and b is not None else None
+        if pt:
+            notes.append("przeliczono z PL-1992 (EPSG:2180); przyjęto: pierwsza kolumna = wschód, druga = północ")
+            return pt
+    return lat, lon
+
+
+def _resolve_coordinates(raw: pd.Series, get, mapping: Mapping):
+    notes: List[str] = []
+    lat, lon = parse_coordinate(get(COL_LAT)), parse_coordinate(get(COL_LON))
+    if lat is None or lon is None:
+        lat, lon = _coordinates_from_alternatives(raw, mapping, lat, lon, notes)
+    if lat is not None and lon is not None:
+        if not (in_lat(lat) and in_lon(lon)) and in_lat(lon) and in_lon(lat):
+            lat, lon = lon, lat
+            notes.append("zamieniono szerokość z długością")
+        lat, lon = round(lat, 6), round(lon, 6)
+    return lat, lon, notes
+
+
+def _row_values(get, lat, lon) -> Dict[str, Any]:
+    hours = get(COL_HOURS)
+    availability = normalize_availability(get(COL_AVAILABILITY), hours)
+    if availability is None and not _blank(hours):
+        availability = normalize_availability(None, hours)
+    verified = parse_date(get(COL_VERIFIED))
+    ident = get(COL_ID)
+    return {
+        COL_ID: str(ident).strip() if ident is not None else None,
+        COL_LAT: lat,
+        COL_LON: lon,
+        COL_CITY: get(COL_CITY),
+        COL_STREET: get(COL_STREET),
+        COL_TERYT: parse_teryt(get(COL_TERYT)),
+        COL_LOCATION: get(COL_LOCATION),
+        COL_OBJECT_TYPE: get(COL_OBJECT_TYPE),
+        COL_AVAILABILITY: availability,
+        COL_HOURS: hours,
+        COL_ACCESS: normalize_access(get(COL_ACCESS)),
+        COL_STATUS: normalize_status(get(COL_STATUS)),
+        COL_VERIFIED: verified.isoformat() if verified else None,
+        COL_CONTACT: get(COL_CONTACT),
+    }
+
+
+def _apply_defaults(values: Dict[str, Any], defaults: Dict[str, Any], notes: List[str], id_prefix: str, number: int) -> None:
+    """Wartości domyślne (jawne) tylko tam, gdzie źródło nic nie podaje; brakujący identyfikator jest nadawany."""
+    for col, default in defaults.items():
+        if col in values and _blank(values[col]):
+            values[col] = default
+            notes.append(f"wartość domyślna: {col}")
+    if _blank(values[COL_ID]):
+        values[COL_ID] = f"{id_prefix}-{number:04d}"
+        notes.append("nadano identyfikator")
+
+
+def _row_error(values: Dict[str, Any]) -> Optional[str]:
+    from mcod.aed.utils import check_row  # unikamy cyklu importów
+
+    error = check_row(pd.Series(values))
+    no_coordinates = values[COL_LAT] is None or values[COL_LON] is None
+    has_address = not (_blank(values[COL_STREET]) and _blank(values[COL_CITY]))
+    if error and no_coordinates and has_address:
+        return ADDRESS_ONLY_ERROR  # lista z samymi adresami: nie zgadujemy współrzędnych, ale mówimy, co dalej
+    return error
+
+
 def convert_dataframe(
     df: pd.DataFrame,
     profile: Optional[Dict[str, Any]] = None,
@@ -419,8 +546,6 @@ def convert_dataframe(
     pl1992_north_first: bool = False,
 ) -> Tuple[pd.DataFrame, List[Dict[str, Any]], Mapping]:
     """Zwraca (DataFrame w układzie wzorca, raport wierszy, mapowanie)."""
-    from mcod.aed.utils import check_row  # unikamy cyklu importów
-
     defaults = {**((profile or {}).get("defaults") or {}), **(defaults or {})}
     mapping = map_columns(df, profile)
     if mapping.pl1992 and pl1992_north_first:
@@ -429,78 +554,17 @@ def convert_dataframe(
     rows: List[Dict[str, Any]] = []
 
     for idx, raw in df.iterrows():
-        notes: List[str] = []
         get = lambda col: _first_value(raw, mapping.columns.get(col))  # noqa: E731
-
-        # współrzędne
-        lat = parse_coordinate(get(COL_LAT))
-        lon = parse_coordinate(get(COL_LON))
-        if (lat is None or lon is None) and mapping.combined_point:
-            pt = parse_point(raw.get(mapping.combined_point))
-            if pt:
-                lat, lon = pt
-                notes.append("współrzędne z jednej kolumny")
-        if (lat is None or lon is None) and mapping.pl1992:
-            a, b = parse_coordinate(raw.get(mapping.pl1992[0])), parse_coordinate(raw.get(mapping.pl1992[1]))
-            if a is not None and b is not None:
-                pt = from_pl1992(a, b)
-                if pt:
-                    lat, lon = pt
-                    notes.append("przeliczono z PL-1992 (EPSG:2180); przyjęto: pierwsza kolumna = wschód, druga = północ")
-        if lat is not None and lon is not None and not (in_lat(lat) and in_lon(lon)) and in_lat(lon) and in_lon(lat):
-            lat, lon = lon, lat
-            notes.append("zamieniono szerokość z długością")
-        if lat is not None and lon is not None:
-            lat, lon = round(lat, 6), round(lon, 6)
-
-        hours = get(COL_HOURS)
-        availability = normalize_availability(get(COL_AVAILABILITY), hours)
-        if availability is None and not _blank(hours):
-            availability = normalize_availability(None, hours)
-        access = normalize_access(get(COL_ACCESS))
-        status = normalize_status(get(COL_STATUS))
-        verified = parse_date(get(COL_VERIFIED))
-        ident = get(COL_ID)
-
-        values: Dict[str, Any] = {
-            COL_ID: str(ident).strip() if ident is not None else None,
-            COL_LAT: lat,
-            COL_LON: lon,
-            COL_CITY: get(COL_CITY),
-            COL_STREET: get(COL_STREET),
-            COL_TERYT: parse_teryt(get(COL_TERYT)),
-            COL_LOCATION: get(COL_LOCATION),
-            COL_OBJECT_TYPE: get(COL_OBJECT_TYPE),
-            COL_AVAILABILITY: availability,
-            COL_HOURS: hours,
-            COL_ACCESS: access,
-            COL_STATUS: status,
-            COL_VERIFIED: verified.isoformat() if verified else None,
-            COL_CONTACT: get(COL_CONTACT),
-        }
-
-        # wartości domyślne (jawne) tylko tam, gdzie źródło nic nie podaje
-        for col, default in defaults.items():
-            if col in values and _blank(values[col]):
-                values[col] = default
-                notes.append(f"wartość domyślna: {col}")
-        if _blank(values[COL_ID]):
-            values[COL_ID] = f"{id_prefix}-{len(rows) + 1:04d}"
-            notes.append("nadano identyfikator")
-
-        error = check_row(pd.Series(values))
-        if error and (lat is None or lon is None) and not (_blank(values[COL_STREET]) and _blank(values[COL_CITY])):
-            # lista z samymi adresami: nie zgadujemy współrzędnych, ale mówimy, co dalej
-            error = (
-                "brak współrzędnych (jest adres). Konwerter nie geokoduje adresów; na dane.gov.pl portal potrafi je "
-                "wyliczyć własnym geokoderem, w środowisku lokalnym niedostępnym. Uzupełnij współrzędne u dysponenta"
-            )
-        row_id = values[COL_ID]
+        lat, lon, notes = _resolve_coordinates(raw, get, mapping)
+        values = _row_values(get, lat, lon)
+        _apply_defaults(values, defaults, notes, id_prefix, len(rows) + 1)
+        error = _row_error(values)
+        entry = {"wiersz": int(idx) + 2, "id": values[COL_ID]}
         if error:
-            report.append({"wiersz": int(idx) + 2, "id": row_id, "wynik": "odrzucono", "szczegoly": error})
+            report.append({**entry, "wynik": "odrzucono", "szczegoly": error})
             continue
         rows.append(values)
-        report.append({"wiersz": int(idx) + 2, "id": row_id, "wynik": "poprawiono" if notes else "ok", "szczegoly": "; ".join(notes)})
+        report.append({**entry, "wynik": "poprawiono" if notes else "ok", "szczegoly": "; ".join(notes)})
 
     out = pd.DataFrame(rows, columns=TARGET_COLUMNS)
     out.insert(0, "Lp.", range(1, len(out) + 1))
@@ -556,6 +620,8 @@ def json_to_frame(data: Dict[str, Any]) -> pd.DataFrame:
     df = pd.DataFrame(records)
     if "addr:street" in df.columns:
         number = df["addr:housenumber"] if "addr:housenumber" in df.columns else ""
-        df["_street"] = (df["addr:street"].fillna("").astype(str) + " " + pd.Series(number, index=df.index).fillna("").astype(str)).str.strip()
+        df["_street"] = (
+            df["addr:street"].fillna("").astype(str) + " " + pd.Series(number, index=df.index).fillna("").astype(str)
+        ).str.strip()
         df["_street"] = df["_street"].replace("", None)
     return df
