@@ -1,5 +1,9 @@
 {% extends "admin/base_site.html" %}
 
+{% block extrahead %}{{ block.super }}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+
 {% block extrastyle %}{{ block.super }}
 <style>
   .aed-conv { max-width: 1100px; }

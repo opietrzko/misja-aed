@@ -81,7 +81,9 @@ Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
 - **PL-1992:** kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest przełącznik).
 - **Import CKAN** nie sprawdza, czy instytucja ma już wykaz AED dodany inną drogą (XML sprawdza). Walidatory XML i CKAN sprawdzone na przykładowych danych, nie na pełnym imporcie harvestera.
 - **Harmonogram** codziennego scalania jest w kodzie (Celery beat), ale lokalnie nie jest uruchomiony. Scalanie uruchamialiśmy ręcznie komendą `aed_build_main`.
-- **Nie zweryfikowane:** wygląd i dostępność (WCAG) nowych elementów (strona konwertera, pole w formularzu) na urządzeniach mobilnych oraz istniejące testy portalu (harvester, zasoby) po naszych zmianach.
+- **Dostępność i telefon.** Strona konwertera przeszła kontrole statyczne (etykiety pól, opisy i nagłówki tabel, unikalne identyfikatory, kontrast kolorów AA, najniższy 4,92). Szablon panelu administracyjnego portalu nie ma jednak meta viewport i nie jest responsywny
+  (dodaliśmy viewport tylko do naszej strony). Wyglądu na prawdziwym telefonie nie sprawdzaliśmy.
+- **Nie zweryfikowane:** pełny przebieg istniejących testów portalu (sprawdzone wybrane, patrz wyniki w opisie projektu) oraz walidatory XML i CKAN na pełnym imporcie harvestera.
 
 ## Dane demonstracyjne
 Pliki w `backend/mcod/aed/demo_data/` (generator: `aed-demo/generate_demo.py`) są **syntetyczne** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawierają celowe błędy, żeby pokazać walidację
