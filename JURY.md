@@ -23,6 +23,19 @@ Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pli
 | 8 | Księga znaku (PDF) | `identyfikacja-wizualna/ksiega-znaku.pdf`: koncepcja (4 zdania), kolorystyka, pole ochronne, minimalna wielkość, niedozwolone użycia, typografia, wersje znaku, zastosowania |
 | 9 | Zachęcenie dysponentów do dzielenia się danymi | `identyfikacja-wizualna/materialy/`: plakat A3, naklejka „Ten AED jest w bazie” z kodem QR, baner dla dane.gov.pl, post, animowane logo (SVG); komunikaty do dysponentów w księdze znaku |
 
+## Konto administratora do testów (prototyp online)
+Na wersji online przygotowaliśmy konto administracyjne tylko dla jury. Pozwala wejść do panelu, dodać wykaz, uruchomić konwerter i obejrzeć zbiór zbiorczy.
+
+| Pole | Wartość |
+|---|---|
+| Panel administracyjny | https://admin.aed.haloware.pl |
+| Konwerter AED | https://admin.aed.haloware.pl/aed/konwerter/ |
+| Login (e-mail) | `jury@aed.haloware.pl` |
+| Hasło | `Jury-bdacb64fe89e!Aed` |
+| Rola | administrator (superużytkownik) |
+
+Środowisko demonstracyjne z danymi syntetycznymi, bez prawdziwych danych. Konto zostanie usunięte po zakończeniu oceny.
+
 ## Kroki dla dostawcy danych (panel administracyjny)
 1. Zaloguj się do panelu administracyjnego jako dostawca. W środowisku lokalnym: `pelnomocnik@mcod.local` (hasło `User123!`); administrator: `admin@mcod.local` (`testadmin123!`). Konta deweloperskie, tylko dane testowe.
 2. Utwórz zbiór danych instytucji i dodaj zasób z plikiem csv/xls/xlsx w układzie z pliku wzorcowego.

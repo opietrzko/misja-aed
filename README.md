@@ -13,7 +13,7 @@
 Rozwiązanie na zadanie konkursowe **Misja AED - Dane na ratunek** (HackNation 2026, Ministerstwo Cyfryzacji).
 Nazwa akcji: **„Przez dane do serca”**, hasło: **„Zdążysz, jeśli wiesz gdzie.”**
 
-**Prototyp online: [aed.haloware.pl](https://aed.haloware.pl)**. Instrukcja dla jury: [`JURY.md`](JURY.md).
+**Prototyp online: [aed.haloware.pl](https://aed.haloware.pl)**. Instrukcja dla jury: [`JURY.md`](JURY.md). Na wersji online jest przygotowane **konto administracyjne do testów dla jury**: login i hasło w [`JURY.md`](JURY.md#konto-administratora-do-testów-prototyp-online).
 
 ---
 
