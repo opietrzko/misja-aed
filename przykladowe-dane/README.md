@@ -9,7 +9,7 @@ przebiegów kodu, pilnowane testem.
 | [`01-wykazy-dostawcow/`](01-wykazy-dostawcow/) | 3 wykazy dostawców w układzie wzorca (csv i xlsx), z celowymi błędami | zasób z flagą „Wykaz defibrylatorów AED", potem scalenie |
 | [`02-konwerter/`](02-konwerter/) | 4 pliki w innym układzie niż wzorzec | strona `/aed/konwerter/` w panelu administracyjnym |
 | [`03-pliki-odrzucane/`](03-pliki-odrzucane/) | pliki, które mają zostać odrzucone, z komunikatami | formularz zasobu albo konwerter |
-| [`05-import-xml/`](05-import-xml/) | przykład importu XML w schemacie 1.14 z `containsAedList` | źródło danych typu XML (harvester) |
+| [`04-import-xml/`](04-import-xml/) | przykład importu XML w schemacie 1.14 z `containsAedList` | źródło danych typu XML (harvester) |
 
 Wzorcowy zakres danych (plik xlsx wymagany w zadaniu): [`../aed-demo/wzorcowy-zakres-danych-AED.xlsx`](../aed-demo/wzorcowy-zakres-danych-AED.xlsx).
 

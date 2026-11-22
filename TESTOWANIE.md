@@ -79,7 +79,7 @@ curl -sk --resolve api.mcod.local:443:127.0.0.1 "https://api.mcod.local/1.4/reso
 ```
 Licencja zbioru: `/1.4/datasets/4214` (pole `license_name`: `CC BY 4.0`).
 
-**S7. Import XML i CKAN.** Przykład XML: `przykladowe-dane/05-import-xml/` (README opisuje wymagania). Pełny import wymaga publicznego adresu plików, patrz sekcja 3.
+**S7. Import XML i CKAN.** Przykład XML: `przykladowe-dane/04-import-xml/` (README opisuje wymagania). Pełny import wymaga publicznego adresu plików, patrz sekcja 3.
 
 **S8. Telefon i tablet.** Strona konwertera: narzędzia deweloperskie przeglądarki, tryb urządzenia, szerokości 375 i 768 px. Oczekiwane: brak poziomego przewijania strony,
 tabele przewijają się w swoich ramkach, menu panelu pod treścią poniżej 768 px.

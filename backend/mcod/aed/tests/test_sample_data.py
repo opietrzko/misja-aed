@@ -160,7 +160,7 @@ def test_rejected_files_behave_as_documented():
 
 def test_xml_sample_is_valid_for_1_14_and_rejected_by_1_13():
     xmlschema = pytest.importorskip("xmlschema")
-    xml = SAMPLES / "05-import-xml" / "przyklad-harvester-1.14.xml"
+    xml = SAMPLES / "04-import-xml" / "przyklad-harvester-1.14.xml"
     data = ROOT / "backend" / "data" / "harvester"
     assert xmlschema.XMLSchema(str(data / "xml_import_otwarte_dane_1_14.xsd")).is_valid(str(xml))
     as_13 = xml.read_text(encoding="utf-8").replace("harvester:1.14", "harvester:1.13")
