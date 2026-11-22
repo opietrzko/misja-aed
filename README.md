@@ -77,7 +77,7 @@ Całość jest w [`identyfikacja-wizualna/`](identyfikacja-wizualna/):
 | `aed-demo/` | wzorcowy plik xlsx (wymagany w zadaniu) i generator przykładowych danych |
 | [`TESTOWANIE.md`](TESTOWANIE.md) | jak testować wszystko: testy automatyczne i ręczne scenariusze |
 | `identyfikacja-wizualna/` | logo, ikony, materiały i księga znaku |
-| [`prezentacja/`](prezentacja/) | prezentacja konkursowa (PowerPoint z animacjami, wersja robocza) |
+| [`prezentacja/`](prezentacja/) | prezentacja konkursowa (PowerPoint z animacjami) |
 | `wymagania-konkursowe/` | treść i regulamin zadania |
 
 Zmiany w istniejącym kodzie portalu są addytywne (patrz `backend/CHANGELOG.md`, sekcja Unreleased), bez nowych zależności.
