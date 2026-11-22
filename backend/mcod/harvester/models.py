@@ -38,6 +38,7 @@ from mcod.harvester.ckan_utils import (
     format_not_dga_institution_type_error_details,
     format_org_already_has_dga_resource,
     format_org_has_more_than_one_dga_resource,
+    format_res_aed_invalid_error_details,
     format_organization_in_trash_error_details,
     format_res_dga_other_metadata_conflict_error_details,
     format_res_dga_url_bad_columns_error_details,
@@ -48,6 +49,7 @@ from mcod.harvester.ckan_utils import (
     format_res_org_hvd_ec_conflict_error_details,
     format_too_many_dga_resources_for_organization,
 )
+from mcod.aed.utils import AED_REMOTE_MESSAGES, check_remote_aed_file
 from mcod.harvester.exceptions import CKANPartialValidationException
 from mcod.harvester.managers import DataSourceManager
 from mcod.harvester.utils import make_request, retrieve_to_file
@@ -1049,6 +1051,8 @@ class DataSource(AdminMixin, LogMixin, SoftDeletableModel, TimeStampedModel):
             CKANPartialImportError.TOO_MANY_DGA_RESOURCES_FOR_ORGANIZATION: format_too_many_dga_resources_for_organization,  # noqa: E501
             CKANPartialImportError.ORGANIZATION_ALREADY_HAS_DGA_RESOURCE: format_org_already_has_dga_resource,
             CKANPartialImportError.ORGANIZATION_HAS_MORE_THAN_ONE_DGA_RES: format_org_has_more_than_one_dga_resource,
+            # AED (Misja AED)
+            CKANPartialImportError.RES_AED_INVALID: format_res_aed_invalid_error_details,
         }
         return error_description_functions
 
@@ -1092,6 +1096,30 @@ class DataSource(AdminMixin, LogMixin, SoftDeletableModel, TimeStampedModel):
         self._ckan_validate_item_org_single_dga_json(item, dga_per_organization)
         self._ckan_validate_item_org_does_not_have_dga_resource(item)
         self._ckan_validate_item_resources_dga_url(item)
+        # AED (Misja AED) validations
+        self._ckan_validate_item_resources_aed(item)
+
+    @staticmethod
+    def _ckan_validate_item_resources_aed(item: ItemData) -> None:
+        """Wykaz AED w imporcie CKAN: jeden na zbiór, plik z adresem url i wzorcowymi kolumnami."""
+        item_id: str = item["ext_ident"]
+        aed_resources = [r for r in item.get("resources", []) if r.get("contains_aed_list") is True]
+        if len(aed_resources) > 1:
+            raise CKANPartialValidationException(
+                error_code=CKANPartialImportError.RES_AED_INVALID,
+                error_data={
+                    "item_id": item_id,
+                    "resource_id": ", ".join(r["ext_ident"] for r in aed_resources),
+                    "reason": "w zbiorze danych jest więcej niż jeden zasób z contains_aed_list równym true",
+                },
+            )
+        for resource in aed_resources:
+            error = check_remote_aed_file(resource.get("link"))
+            if error:
+                raise CKANPartialValidationException(
+                    error_code=CKANPartialImportError.RES_AED_INVALID,
+                    error_data={"item_id": item_id, "resource_id": resource["ext_ident"], "reason": AED_REMOTE_MESSAGES[error]},
+                )
 
     def _ckan_items_partial_validation(self, items: List[ItemData]) -> Tuple[List[ItemData], int, str]:
         """

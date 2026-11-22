@@ -21,6 +21,7 @@ class CKANPartialImportError(Enum):
     TOO_MANY_DGA_RESOURCES_FOR_ORGANIZATION = 14
     ORGANIZATION_ALREADY_HAS_DGA_RESOURCE = 15
     ORGANIZATION_HAS_MORE_THAN_ONE_DGA_RES = 16
+    RES_AED_INVALID = 17
 
 
 def format_invalid_license_error_details(errors_data: List[Dict[str, Any]]) -> str:
@@ -290,5 +291,21 @@ def format_org_already_has_dga_resource(errors_data: List[Dict[str, Any]]) -> st
         inner_error_desc += f"<p>Zasób istniejący w bazie danych: 'title': {db_resource_title}, 'id': {db_resource_id}</p>"
         inner_descriptions.append(inner_error_desc)
 
+    inner_error_desc: str = "<br>".join(inner_descriptions)
+    return f'{error_desc}<div class="expandable">{inner_error_desc}</div>'
+
+
+def format_res_aed_invalid_error_details(errors_data: List[Dict[str, Any]]) -> str:
+    error_desc = (
+        "<p>Zasób z polem 'contains_aed_list' równym true musi być plikiem csv, xls lub xlsx w wzorcowym układzie "
+        "kolumn wykazu AED (Misja AED), z działającym adresem 'url'; w zbiorze danych może być co najwyżej jeden taki zasób.</p>"
+    )
+    inner_descriptions: List[str] = []
+    for error in errors_data:
+        inner_descriptions.append(
+            f"<p><strong>id zbioru danych:</strong> {error['item_id']}</p>"
+            f"<p><strong>id zasobu:</strong> {error['resource_id']}</p>"
+            f"<p><strong>powód:</strong> {error['reason']}</p>"
+        )
     inner_error_desc: str = "<br>".join(inner_descriptions)
     return f'{error_desc}<div class="expandable">{inner_error_desc}</div>'

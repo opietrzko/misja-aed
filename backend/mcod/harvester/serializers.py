@@ -25,6 +25,7 @@ from mcod.core.api import fields
 from mcod.core.api.rdf.profiles.dcat_ap import DCATDatasetDeserializer
 from mcod.core.serializers import CSVSerializer
 from mcod.datasets.models import Dataset
+from mcod.aed.utils import AED_REMOTE_MESSAGES, check_remote_aed_file, get_aed_resource_for_institution
 from mcod.harvester.schema_utils import get_and_validate_resource_format_from_response
 from mcod.lib.metadata_validators import (
     validate_conflicting_high_value_data_flags,
@@ -256,6 +257,7 @@ class ResourceSchema(ResourceMixin, CKANPreProcessedSchema):
     )
     has_research_data = Bool(allow_none=True, missing=None)
     contains_protected_data = Bool(allow_none=True, missing=False)
+    contains_aed_list = Bool(allow_none=True, missing=False)
     package_id = UUID()
     position = Int()
     resource_type = Str(allow_none=True)
@@ -278,6 +280,7 @@ class ResourceSchema(ResourceMixin, CKANPreProcessedSchema):
             "has_high_value_data_from_ec_list",
             "has_research_data",
             "contains_protected_data",
+            "contains_aed_list",
         )
         unknown = EXCLUDE
 
@@ -434,6 +437,7 @@ class XMLResourceSchema(ResourceMixin, XMLPreProcessedSchema):
     has_high_value_data_from_ec_list = Bool(data_key="hasHighValueDataFromEuropeanCommissionList", allow_none=True, missing=None)
     has_research_data = Bool(data_key="hasResearchData", allow_none=True, missing=None)
     contains_protected_data = Bool(data_key="containsProtectedData", missing=False)
+    contains_aed_list = Bool(data_key="containsAedList", missing=False)
     supplements = Nested(XMLSupplementSchema, many=True)
     is_auto_data_date = Bool(data_key="isAutoDataDate")
     data_date_update_period = Str(
@@ -675,6 +679,50 @@ class XMLResourceSchema(ResourceMixin, XMLPreProcessedSchema):
                             "with a value equal to true. Resource: 'title' = %(title)s, 'id' = %(id)s."
                         ) % {"field_name": "containsProtectedData", "title": resource_dga_db.title, "id": resource_dga_db.pk}
                         raise ValidationError(message=msg_institution_owns_dga, field_name=field_name)
+
+
+    @validates_schema
+    def validate_contains_aed_list(self, data, **kwargs):
+        """Wykaz AED (Misja AED): te same reguły co dla wykazu DGA, ale z wzorcowym układem kolumn AED."""
+        if not data.get("contains_aed_list"):
+            return
+        field_name = "contains_aed_list"
+
+        if data.get("contains_protected_data"):
+            raise ValidationError(
+                message="Zasób nie może mieć jednocześnie pól 'containsProtectedData' i 'containsAedList' równych true.",
+                field_name=field_name,
+            )
+
+        error = check_remote_aed_file(data.get("link"))
+        if error:
+            raise ValidationError(message=AED_REMOTE_MESSAGES[error], field_name=field_name)
+
+        aed_resources = [
+            (rs.get("extIdent"), rs["title"]["polish"])
+            for ds in self.context["loaded_data"]
+            for rs in ds.get("resources")
+            if rs.get("containsAedList")
+        ]
+        if len(aed_resources) > 1:
+            details = ", ".join(f"Zasób {i}: 'title' = {t}, 'ext_ident' = {e}" for i, (e, t) in enumerate(aed_resources, start=1))
+            raise ValidationError(
+                message=f"W pliku harvestera jest więcej niż 1 zasób z polem 'containsAedList' równym true. {details}",
+                field_name=field_name,
+            )
+
+        try:
+            existing = get_aed_resource_for_institution(self.context["organization"].pk)
+        except MultipleObjectsReturned as exc:
+            raise ValidationError(message=str(exc), field_name=field_name)
+        if existing is not None and not existing.is_added_by_harvester_with_id(self.context["source_id"]):
+            raise ValidationError(
+                message=(
+                    "Dostawca ma już w portalu wykaz AED dodany inną drogą. "
+                    f"Zasób: 'title' = {existing.title}, 'id' = {existing.pk}."
+                ),
+                field_name=field_name,
+            )
 
 
 class XMLDatasetSchema(XMLPreProcessedSchema):
