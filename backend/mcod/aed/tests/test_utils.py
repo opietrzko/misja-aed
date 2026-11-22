@@ -327,7 +327,7 @@ def test_build_main_df_normalizes_address_and_hours_and_scores_trust():
             "Szerokość geograficzna": 50.06143,
             "Długość geograficzna": 19.93658,
             "Dostępność": "w godzinach",
-            "Godziny dostępności": "pn–pt 7:30–16:00",
+            "Godziny dostępności": "pn\u2013pt 7:30\u201316:00",
         }
     )
     main = build_main_df([(make_df(row), {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})], today=TODAY)

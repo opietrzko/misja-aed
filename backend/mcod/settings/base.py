@@ -1726,7 +1726,7 @@ MAIN_DGA_RESOURCE_DEFAULT_DESC = (
     f"(w tym jak złożyć wniosek) dowiesz się w Punkcie informacyjnym pod "
     f'adresem: <a href="{BASE_URL}/pl/dga/information">{BASE_URL}/pl/dga/information</a>'
 )
-MAIN_DGA_DATASET_DEFAULT_TITLE = "Wykaz zasobów chronionych danych DGA – raport zbiorczy"
+MAIN_DGA_DATASET_DEFAULT_TITLE = "Wykaz zasobów chronionych danych DGA - raport zbiorczy"
 MAIN_DGA_DATASET_DEFAULT_DESC = (
     f"Wykaz zasobów chronionych danych raport zbiorczy. Dane w tym zasobie "
     f"odzwierciedlają właściwy wykaz chronionych danych umieszczony w zakładce "
@@ -1739,7 +1739,7 @@ MAIN_DGA_DATASET_DEFAULT_DESC = (
     f"dostępnym pod adresem: "
     f'<a href="{BASE_URL}/pl/dga/information">{BASE_URL}/pl/dga/information</a>'
 )
-MAIN_DGA_XLSX_FILE_NAME_PREFIX = "Wykaz zasobów chronionych DGA – wykaz zbiorczy – Ministerstwo Cyfryzacji"
+MAIN_DGA_XLSX_FILE_NAME_PREFIX = "Wykaz zasobów chronionych DGA - wykaz zbiorczy - Ministerstwo Cyfryzacji"
 MAIN_DGA_XLSX_WORKSHEET_NAME = "Arkusz 1"
 MAIN_DGA_DATASET_UPDATE_NOTIFICATION_EMAIL = "chronionedane@cyfra.gov.pl"
 MAIN_DGA_DATASET_CATEGORIES_TITLES = ["Rząd i sektor publiczny"]
@@ -1761,7 +1761,7 @@ MAIN_AED_RESOURCE_DEFAULT_DESC = (
     "Każdy rekord wskazuje dysponenta, zakres referencyjny źródła i datę ostatniej weryfikacji urządzenia. "
     "Za jakość danych źródłowych odpowiada dysponent danego wykazu. Dane aktualizowane codziennie."
 )
-MAIN_AED_DATASET_DEFAULT_TITLE = "Ogólnopolski wykaz defibrylatorów AED – zbiór zbiorczy"
+MAIN_AED_DATASET_DEFAULT_TITLE = "Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy"
 MAIN_AED_DATASET_DEFAULT_DESC = (
     "Zbiór agreguje wykazy defibrylatorów AED udostępniane w portalu przez wielu dysponentów "
     "w jednolitym układzie (wzorcowy zakres danych Misji AED). Pozwala odnaleźć najbliższe urządzenie "
@@ -1826,7 +1826,7 @@ Przykłady:
         _("Phone number"),
         "W polskiej strefie numeracyjnej zaleca się zapisywanie numeru telefonu jako ciągu 9 cyfr, bez wyróżniania "
         "tzw. numeru kierunkowego miejscowości. Dopuszczalne jest stosowanie prefiksu międzynarodowego poprzedzonego "
-        "znakiem plus „+” – struktura xxxxxxxxx/ lub +48xxxxxxxxx. Nie stosuje się spacji, nawiasów i łączników ani "
+        "znakiem plus „+” - struktura xxxxxxxxx/ lub +48xxxxxxxxx. Nie stosuje się spacji, nawiasów i łączników ani "
         "podobnych znaków pełniących role separatorów.",
     ),
     ("bool", _("Field of logical values"), "Wymagane wartości: True, False"),

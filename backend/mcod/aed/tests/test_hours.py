@@ -6,13 +6,15 @@ from mcod.aed.hours import normalize_hours
 @pytest.mark.parametrize(
     "text,expected",
     [
-        ("pn–pt 7:30–16:00", "Mo-Fr 07:30-16:00"),
+        ("pn\u2013pt 7:30\u201316:00", "Mo-Fr 07:30-16:00"),  # polska półpauza
+        ("pn\u2014pt 8-16", "Mo-Fr 08:00-16:00"),  # pauza
+        ("pn-pt 7:30-16:00", "Mo-Fr 07:30-16:00"),
         ("pn-pt 7-17", "Mo-Fr 07:00-17:00"),
         ("Mo-Fr 08:00-18:00", "Mo-Fr 08:00-18:00"),
         ("godz: 8.00-18.00 w dni robocze", "Mo-Fr 08:00-18:00"),
         ("8.00-18.00 w dni robocze", "Mo-Fr 08:00-18:00"),
         ("od 8 do 16 codziennie", "Mo-Su 08:00-16:00"),
-        ("codziennie 9:00–21:00", "Mo-Su 09:00-21:00"),
+        ("codziennie 9:00\u201321:00", "Mo-Su 09:00-21:00"),
         ("Mo-Su 07:00-22:00", "Mo-Su 07:00-22:00"),
         ("pn-pt 7-17, sob 9-13", "Mo-Fr 07:00-17:00; Sa 09:00-13:00"),
         ("Mo-Fr 08:00-12:00,14:00-18:00", "Mo-Fr 08:00-12:00,14:00-18:00"),

@@ -22,12 +22,12 @@ DESCRIPTIONS = {
     "Lp.": ("Liczba porządkowa wiersza.", "tak", "1"),
     "Identyfikator AED": ("Unikalny identyfikator urządzenia nadany przez dysponenta.", "tak", "KRK-0001"),
     "Szerokość geograficzna": (
-        "WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 48.9–55.0).",
+        "WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 48.9-55.0).",
         "tak",
         "50.06143",
     ),
     "Długość geograficzna": (
-        "WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 14.0–24.2).",
+        "WGS84, stopnie dziesiętne, kropka jako separator (zakres dla Polski 14.0-24.2).",
         "tak",
         "19.93658",
     ),
@@ -41,7 +41,7 @@ DESCRIPTIONS = {
     ),
     "Rodzaj obiektu": ("Typ miejsca: urząd, szkoła, dworzec, galeria, przestrzeń publiczna…", "zalecane", "urząd"),
     "Dostępność": ("Jedna z wartości: " + ", ".join(AVAILABILITY_VALUES) + ".", "tak", "w godzinach"),
-    "Godziny dostępności": ("Np. „pn–pt 7:30–16:00”; dla „całodobowo” puste.", "jeśli w godzinach", "pn–pt 7:30–16:00"),
+    "Godziny dostępności": ("Np. „pn-pt 7:30-16:00”; dla „całodobowo” puste.", "jeśli w godzinach", "pn-pt 7:30-16:00"),
     "Sposób dostępu": ("Jedna z wartości: " + ", ".join(ACCESS_VALUES) + ".", "tak", "swobodny"),
     "Status urządzenia": ("Jedna z wartości: " + ", ".join(STATUS_VALUES) + ".", "tak", "czynny"),
     "Data ostatniej weryfikacji": (

@@ -1,6 +1,6 @@
 # Misja AED: wspólny wykaz defibrylatorów w dane.gov.pl
 
-Rozwiązanie na zadanie konkursowe **Misja AED – Dane na ratunek** (HackNation 2026, Ministerstwo Cyfryzacji).
+Rozwiązanie na zadanie konkursowe **Misja AED - Dane na ratunek** (HackNation 2026, Ministerstwo Cyfryzacji).
 Hasło akcji na logo: **„Przez dane do serca”**.
 
 ## Pomysł w skrócie
@@ -40,7 +40,7 @@ Testy logiki AED (bez Dockera, w venv z `pandas pytest openpyxl pyproj`), z kata
 `PYTHONPATH=. python -m pytest mcod/aed/tests -c /dev/null --confcutdir=mcod/aed/tests --rootdir=. --ignore=mcod/aed/tests/test_remote_check.py -q`
 
 ## Wykorzystanie sztucznej inteligencji
-Zgodnie z regulaminem zadania (§2 ust. 7–8) wskazujemy zakres użycia AI:
+Zgodnie z regulaminem zadania (§2 ust. 7-8) wskazujemy zakres użycia AI:
 - **Kod, testy i dokumentacja techniczna:** pisane z pomocą Claude (Claude Code, Anthropic) pod kierunkiem zespołu.
 - **Identyfikacja wizualna** (logo, ikony, materiały, księga znaku): wykonana w programie **Affinity**, w którym pomagał Claude (przez MCP), na podstawie poleceń zespołu.
 - **Wkład zespołu:** koncepcja akcji i jej nazwa, kierunek graficzny, analiza zadania i wskazówek mentora, decyzje projektowe (m.in. rozszerzenie portalu

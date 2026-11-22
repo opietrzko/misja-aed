@@ -1,6 +1,6 @@
 """Parser godzin dostępności: wolny tekst -> jednolity zapis (podzbiór składni OpenStreetMap opening_hours).
 
-Rozumie polskie i angielskie zapisy: „pn–pt 7:30–16:00”, „Mo-Fr 08:00-18:00”, „godz: 8.00-18.00 w dni robocze”,
+Rozumie polskie i angielskie zapisy: „pn-pt 7:30-16:00”, „Mo-Fr 08:00-18:00”, „godz: 8.00-18.00 w dni robocze”,
 „od 8 do 16 codziennie”, „pn-pt 7-17, sob 9-13”, „całodobowo”. Czego nie jest pewny, nie zgaduje: zwraca None.
 Wynik: „24/7” albo segmenty w rodzaju „Mo-Fr 07:30-16:00; Sa 09:00-13:00”.
 """
@@ -76,7 +76,7 @@ def _prepare(text: str) -> str:
     text = re.sub(r"\b(Mo|Tu|We|Th|Fr|Sa|Su)\b", lambda m: _OSM_TO_PL[m.group(1)], text)
     text = unicodedata.normalize("NFKD", text.lower().replace("ł", "l"))
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
-    text = re.sub(r"[–—−]", "-", text)
+    text = re.sub(r"[\u2013\u2014\u2212]", "-", text)  # półpauza, pauza i znak minus jako zwykły łącznik
     return re.sub(r"\bod\s+(\d{1,2}(?:[:.]\d{2})?)\s+do\s+(\d{1,2}(?:[:.]\d{2})?)", r"\1-\2", text)
 
 

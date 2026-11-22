@@ -1,9 +1,9 @@
-# Misja AED – instrukcja dla jury
+# Misja AED - instrukcja dla jury
 
 > Wersja robocza: adresy i konta uzupełnimy po wdrożeniu publicznym prototypu.
 
 ## Idea w jednym zdaniu
-Portal dane.gov.pl dostaje **wykaz AED** – nowy typ zasobu (wzorowany na wykazie DGA): każdy dysponent publikuje
+Portal dane.gov.pl dostaje **wykaz AED** - nowy typ zasobu (wzorowany na wykazie DGA): każdy dysponent publikuje
 własny wykaz w jednolitym układzie kolumn, a portal **codziennie scala je w jeden ogólnopolski wykaz**.
 Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dysponenta i zakres referencyjny źródła.
 
@@ -13,9 +13,9 @@ Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dy
 |---|-----------|-------|
 | 1 | Wzorcowy zakres danych (xlsx) | `aed-demo/wzorcowy-zakres-danych-AED.xlsx` (arkusze: wzór, opis kolumn, kolumny wykazu zbiorczego) |
 | 2 | Dane z wielu rozproszonych źródeł ze wskazaniem zakresu referencyjnego | wykaz zbiorczy: kolumny „Nazwa dysponenta zasobu”, „Zakres referencyjny źródła”, „Data aktualizacji zasobu źródłowego” |
-| 3 | Integracja informacji od wszystkich dysponentów w jednym zbiorze | zbiór „Ogólnopolski wykaz defibrylatorów AED – zbiór zbiorczy” |
+| 3 | Integracja informacji od wszystkich dysponentów w jednym zbiorze | zbiór „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy” |
 | 4 | Format odczytywalny maszynowo | zasób zbiorczy w CSV; źródła csv/xls/xlsx |
-| 5 | Zgodność z zasadami portalu | rozszerzenie istniejących mechanizmów portalu: flaga zasobu, walidacja w formularzu, zadanie Celery – patrz `backend/mcod/aed/` |
+| 5 | Zgodność z zasadami portalu | rozszerzenie istniejących mechanizmów portalu: flaga zasobu, walidacja w formularzu, zadanie Celery - patrz `backend/mcod/aed/` |
 | 6 | Kod źródłowy | `backend/mcod/aed/`, zmiany w `backend/mcod/resources/` (forms, admin, models, migracja 0076) |
 
 ## Kroki dla dostawcy danych (panel administracyjny)
@@ -69,7 +69,7 @@ Wszystko deterministyczne, na pandas i bibliotece standardowej, bez nowych zale�
   minus 10 za każdą flagę anomalii. Urządzenie „nieczynne” dostaje najwyżej 20. Kolumny „Wiarygodność” i „Uwagi do danych”.
 - **Flagi anomalii:** niska precyzja współrzędnych (≤ 3 miejsca po przecinku to ok. 100 m i gorzej), co najmniej 3 rekordy jednego dysponenta w identycznym punkcie
   (podejrzany „środek miasta”), data weryfikacji z przyszłości, nierozpoznane godziny.
-- **Parser godzin:** z „pn–pt 7:30–16:00”, „Mo-Fr 08:00-18:00”, „godz: 8.00-18.00 w dni robocze”, „od 8 do 16 codziennie”, „pn-pt 7-17, sob 9-13” robi jednolity
+- **Parser godzin:** z „pn-pt 7:30-16:00”, „Mo-Fr 08:00-18:00”, „godz: 8.00-18.00 w dni robocze”, „od 8 do 16 codziennie”, „pn-pt 7-17, sob 9-13” robi jednolity
   zapis (`Mo-Fr 07:30-16:00; Sa 09:00-13:00`, `24/7`). Nie zgaduje: godziny bez dni, niepoprawne albo nakładające się przedziały zostają nierozpoznane (kolumna
   „Godziny (znormalizowane)” pusta i flaga w uwagach).
 - **Adresy:** „ulica Paradna 36, 93-345 Łódź” → „ul. Paradna 36”, miejscowość „Łódź” (gdy nie podano jej osobno), kod „93-345” w osobnej kolumnie. Konwerter uzupełnia

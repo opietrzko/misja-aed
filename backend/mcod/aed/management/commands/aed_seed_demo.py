@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 defaults=dict(
                     slug=p["abbr"].lower(),
                     abbreviation=p["abbr"],
-                    description=f"{p['title']} – dysponent demonstracyjny Misji AED (dane syntetyczne).",
+                    description=f"{p['title']} - dysponent demonstracyjny Misji AED (dane syntetyczne).",
                     institution_type=getattr(Organization, f"INSTITUTION_TYPE_{p['type'].upper()}"),
                     postal_code="00-001",
                     city="Demo",
@@ -66,8 +66,11 @@ class Command(BaseCommand):
             )
             if "file" not in p:  # właściciel zbioru zbiorczego - bez własnego wykazu
                 continue
+            if Resource.objects.filter(dataset__organization=org, contains_aed_list=True).exists():
+                self.stdout.write(f"{p['title']}: wykaz już istnieje, pomijam")
+                continue
             dataset, _ = Dataset.objects.get_or_create(
-                title=f"Wykaz defibrylatorów AED – {p['title']}",
+                title=f"Wykaz defibrylatorów AED - {p['title']}",
                 organization=org,
                 defaults=dict(
                     notes=f"Wykaz AED dysponenta {p['title']}. Zakres: {p['scope']}. Dane syntetyczne (demonstracja).",
@@ -84,7 +87,7 @@ class Command(BaseCommand):
                 continue
             path = DEMO_DIR / p["file"]
             resource = Resource.objects.create(
-                title=f"Wykaz AED – {p['scope']}",
+                title=f"Wykaz AED - {p['scope']}",
                 description=f"Zakres referencyjny: {p['scope']}. Dane syntetyczne.",
                 dataset=dataset,
                 has_dynamic_data=False,
