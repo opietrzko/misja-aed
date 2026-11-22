@@ -21,10 +21,10 @@ Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pli
 | 6 | Kod źródłowy | nowy moduł `backend/mcod/aed/`; zmiany w istniejących plikach: `resources` (forms, admin, models, migracja 0076, API i indeks), `harvester`, `search`, `settings`, `celeryapp`; pełna lista w `backend/CHANGELOG.md` |
 | 7 | Nazwa akcji, hasło i logotyp | nazwa „Przez dane do serca”, hasło „Zdążysz, jeśli wiesz gdzie.”; logotyp w JPG, PNG, PDF i SVG w `identyfikacja-wizualna/` |
 | 8 | Księga znaku (PDF) | `identyfikacja-wizualna/ksiega-znaku.pdf`: koncepcja (4 zdania), kolorystyka, pole ochronne, minimalna wielkość, niedozwolone użycia, typografia, wersje znaku, zastosowania |
-| 9 | Zachęcenie dysponentów do dzielenia się danymi | `identyfikacja-wizualna/materialy/`: plakat A3, naklejka „Ten AED jest w bazie” z kodem QR, baner dla dane.gov.pl, post; komunikaty do dysponentów w księdze znaku |
+| 9 | Zachęcenie dysponentów do dzielenia się danymi | `identyfikacja-wizualna/materialy/`: plakat A3, naklejka „Ten AED jest w bazie” z kodem QR, baner dla dane.gov.pl, post, animowane logo (SVG); komunikaty do dysponentów w księdze znaku |
 
 ## Kroki dla dostawcy danych (panel administracyjny)
-1. Zaloguj się do panelu administracyjnego jako dostawca.
+1. Zaloguj się do panelu administracyjnego jako dostawca. W środowisku lokalnym: `pelnomocnik@mcod.local` (hasło `User123!`); administrator: `admin@mcod.local` (`testadmin123!`). Konta deweloperskie, tylko dane testowe.
 2. Utwórz zbiór danych instytucji i dodaj zasób z plikiem csv/xls/xlsx w układzie z pliku wzorcowego.
 3. Zaznacz „Wykaz defibrylatorów AED: Tak” i zapisz. Przy błędnych kolumnach formularz wskaże oczekiwane nazwy i kolejność.
 4. Po zapisie wykaz trafia do wykazu zbiorczego przy najbliższym przebiegu zadania (codziennie) albo od razu po

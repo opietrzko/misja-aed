@@ -52,7 +52,7 @@ Całość jest w [`identyfikacja-wizualna/`](identyfikacja-wizualna/):
 - **Księga znaku** ([`ksiega-znaku.pdf`](identyfikacja-wizualna/ksiega-znaku.pdf)): opis koncepcji (4 zdania), kolorystyka, konstrukcja i pole ochronne, minimalna wielkość,
   niedozwolone użycia, typografia, wersje znaku, przykłady zastosowań i komunikaty do dysponentów.
 - **Materiały promocyjne** (`identyfikacja-wizualna/materialy/`): plakat A3 (PDF do druku i PNG), naklejka „Ten AED jest w bazie” (okrąg 100 mm z kodem QR, SVG, PDF i PNG),
-  baner dla dane.gov.pl (1200 × 300 px, także @2x) i post kwadratowy do mediów społecznościowych. Do tego zestaw ikon (favicon, ikony aplikacji) w `ikony/`.
+  baner dla dane.gov.pl (1200 × 300 px, także @2x), post kwadratowy do mediów społecznościowych i **animowane logo** (`logo-animowane.svg`: serce, rysująca się linia EKG, uderzenie i napis; pętla 5 s, przy ustawieniu systemu „ogranicz ruch” pokazuje się statyczne logo). Do tego zestaw ikon (favicon, ikony aplikacji) w `ikony/`.
   Materiały pokazują, jak mogłaby wyglądać kampania. Nie są działającymi usługami (np. wspomniane w nich mapa i formularz zgłoszeniowy to przykładowe wezwania do działania).
 
 <p align="right">(<a href="#readme-top">powrót na górę</a>)</p>
@@ -143,7 +143,14 @@ Polecenia wykonuj z katalogu `backend/`, jeśli nie napisano inaczej. Pełna ins
    | API | https://api.mcod.local/1.4/ |
    | Front portalu | http://localhost:4200 |
 
-   Konto deweloperskie do panelu jest opisane w `backend/README.md` (sekcja o panelu administracyjnym).
+   Konta deweloperskie do panelu (środowisko lokalne, dane testowe z `backend/README.md`, sekcja o panelu administracyjnym):
+
+   | Rola | Login | Hasło |
+   |---|---|---|
+   | Dostawca danych (pełnomocnik instytucji) | `pelnomocnik@mcod.local` | `User123!` |
+   | Administrator | `admin@mcod.local` | `testadmin123!` |
+
+   To konta wyłącznie lokalnego środowiska deweloperskiego, bez prawdziwych danych.
 
 9. Dane przykładowe i scalenie (przez `docker exec`, a nie `run`, bo pliki muszą trafić do wspólnego katalogu `media` z Celery)
    ```sh
