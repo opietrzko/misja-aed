@@ -174,3 +174,17 @@ def test_availability_tolerates_typos_in_availability_and_in_hours_column(value)
 def test_availability_typo_tolerance_does_not_touch_real_hours():
     assert normalize_availability(None, "godz: 8.00-18.00 w dni robocze") == "w godzinach"
     assert normalize_availability(None, "pn-pt 7-17") == "w godzinach"
+
+
+def test_address_only_rows_are_rejected_with_actionable_reason():
+    df = pd.DataFrame({"Obiekt": ["szkoła"], "Adres": ["ul. Paradna 36, 93-345 Łódź"], "Godz. dostępu": ["caołobowo"]})
+    out, report, _ = convert_dataframe(df, defaults={COL_VERIFIED: "2026-11-20", COL_ACCESS: "za zgodą", COL_STATUS: "do weryfikacji"})
+    assert len(out) == 0
+    assert report[0]["wynik"] == "odrzucono"
+    assert "brak współrzędnych (jest adres)" in report[0]["szczegoly"] and "geokoduje" in report[0]["szczegoly"]
+
+
+def test_row_without_address_and_coordinates_keeps_generic_reason():
+    df = pd.DataFrame({"Obiekt": ["szkoła"], "Godziny": ["całodobowo"]})
+    out, report, _ = convert_dataframe(df, defaults={COL_VERIFIED: "2026-11-20", COL_ACCESS: "swobodny", COL_STATUS: "czynny"})
+    assert "(jest adres)" not in report[0]["szczegoly"]

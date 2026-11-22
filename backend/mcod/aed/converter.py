@@ -489,6 +489,12 @@ def convert_dataframe(
             notes.append("nadano identyfikator")
 
         error = check_row(pd.Series(values))
+        if error and (lat is None or lon is None) and not (_blank(values[COL_STREET]) and _blank(values[COL_CITY])):
+            # lista z samymi adresami: nie zgadujemy współrzędnych, ale mówimy, co dalej
+            error = (
+                "brak współrzędnych (jest adres). Konwerter nie geokoduje adresów; na dane.gov.pl portal potrafi je "
+                "wyliczyć własnym geokoderem, w środowisku lokalnym niedostępnym. Uzupełnij współrzędne u dysponenta"
+            )
         row_id = values[COL_ID]
         if error:
             report.append({"wiersz": int(idx) + 2, "id": row_id, "wynik": "odrzucono", "szczegoly": error})

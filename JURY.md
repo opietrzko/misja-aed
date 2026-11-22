@@ -68,6 +68,21 @@ Wykaz AED nie wymaga ręcznego klikania w panelu. Instytucja, która zasila port
 - **CKAN:** pole zasobu `contains_aed_list`. Import częściowy odrzuca zbiór z błędnym wykazem i opisuje powód w szczegółach importu w panelu.
 Ograniczenie: w imporcie CKAN nie sprawdzamy jeszcze, czy instytucja ma już wykaz dodany inną drogą (w XML sprawdzamy).
 
+## Ograniczenia
+Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
+- **Brak geokodowania adresów w środowisku lokalnym.** Konwerter wymaga współrzędnych i nie zgaduje ich z adresu. Portal dane.gov.pl ma własny geokoder i potrafi wyliczyć punkty
+  z adresów (miejscowość, kod pocztowy, ulica, numer), ale jego usługi (`GEOCODER_URL`) nie ma w repozytorium ani w naszym środowisku. Przykład z praktyki: prawdziwy wykaz z Łodzi
+  (140 adresów, bez współrzędnych) jest przez konwerter odrzucany z komunikatem „brak współrzędnych (jest adres)". Rozwiązania spoza naszego środowiska: współrzędne od dysponenta
+  albo geokoder portalu. Zewnętrzne geokodowanie (np. z OpenStreetMap) odrzuciliśmy ze względu na licencję (ODbL, share-alike, niezgodna ze zbiorem na CC BY).
+- **Dane demonstracyjne są syntetyczne** (fikcyjni dysponenci). Konwerter nie był testowany na szerokim zestawie prawdziwych plików, poza jednym wykazem z Łodzi.
+- **Licencje źródeł.** OpenStreetMap (ODbL) publikujemy osobno, a nie w zbiorze zbiorczym. Dane PRG (GUGiK) są „bezpłatne i do dowolnego wykorzystania" z podaniem źródła, ale bez nazwanej licencji. To rekomendacje, a nie opinia prawna.
+- **Deduplikacja jest heurystyką** (punkty różnych dysponentów bliżej niż 25 m). Gdy dysponent ma dwa urządzenia blisko jednego cudzego, oba mogą zostać do niego dołączone.
+- **Aktualność:** progi 12 i 24 miesięcy to nasza propozycja, nie wymóg.
+- **PL-1992:** kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest przełącznik).
+- **Import CKAN** nie sprawdza, czy instytucja ma już wykaz AED dodany inną drogą (XML sprawdza). Walidatory XML i CKAN sprawdzone na przykładowych danych, nie na pełnym imporcie harvestera.
+- **Harmonogram** codziennego scalania jest w kodzie (Celery beat), ale lokalnie nie jest uruchomiony. Scalanie uruchamialiśmy ręcznie komendą `aed_build_main`.
+- **Nie zweryfikowane:** wygląd i dostępność (WCAG) nowych elementów (strona konwertera, pole w formularzu) na urządzeniach mobilnych oraz istniejące testy portalu (harvester, zasoby) po naszych zmianach.
+
 ## Dane demonstracyjne
 Pliki w `backend/mcod/aed/demo_data/` (generator: `aed-demo/generate_demo.py`) są **syntetyczne** (fikcyjni dysponenci, identyfikatory DEMO-*). Zawierają celowe błędy, żeby pokazać walidację
 i deduplikację: 14 wierszy wejściowych → 2 odrzucone → 1 duplikat → 11 rekordów w wykazie zbiorczym.
