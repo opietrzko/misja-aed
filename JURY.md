@@ -111,4 +111,6 @@ Pliki w `backend/mcod/aed/demo_data/` (generator: `aed-demo/generate_demo.py`) s
 i deduplikację: 14 wierszy wejściowych → 2 odrzucone → 1 duplikat → 11 rekordów w wykazie zbiorczym.
 
 ## Wykorzystanie AI
-Kod i dokumentację przygotowywano z pomocą asystenta AI (Claude Code). Analizę wymagań, decyzje projektowe i weryfikację wyników wykonał zespół.
+Pełny opis w [`README.md`](README.md#wykorzystanie-sztucznej-inteligencji). W skrócie: kod, testy i dokumentację przygotowano z pomocą Claude (Claude Code) pod kierunkiem zespołu,
+a identyfikację wizualną wykonano w programie Affinity z pomocą Claude (przez MCP) na podstawie poleceń zespołu. Koncepcja, nazwa, decyzje projektowe i weryfikacja wyników: zespół.
+W działaniu prototypu AI nie występuje (jawne reguły).
