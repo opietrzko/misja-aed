@@ -54,6 +54,20 @@ COL_SCOPE = "Zakres referencyjny źródła"
 COL_SOURCE_RESOURCE = "Identyfikator zasobu źródłowego"
 COL_SOURCE_DATE = "Data aktualizacji zasobu źródłowego"
 
+# Kolumny wyliczane przy scalaniu (nie występują w wykazie dostawcy).
+COL_SOURCES_COUNT = "Liczba źródeł"
+COL_OTHER_PROVIDERS = "Pozostali dysponenci"
+COL_FRESHNESS = "Aktualność"
+COL_DAYS_SINCE = "Dni od ostatniej weryfikacji"
+
+# Aktualność rekordu: weryfikacja nie starsza niż FRESH_DAYS = aktualny; do STALE_DAYS = do weryfikacji; starsza = nieaktualny.
+FRESH_DAYS = 365
+STALE_DAYS = 730
+FRESHNESS_ACTUAL = "aktualny"
+FRESHNESS_TO_VERIFY = "do weryfikacji"
+FRESHNESS_STALE = "nieaktualny"
+FRESHNESS_BROKEN = "nieczynny"
+
 MAIN_AED_COLUMNS: List[str] = [
     "Lp.",
     COL_PROVIDER,
@@ -74,6 +88,10 @@ MAIN_AED_COLUMNS: List[str] = [
     COL_STATUS,
     COL_VERIFIED,
     COL_CONTACT,
+    COL_SOURCES_COUNT,
+    COL_OTHER_PROVIDERS,
+    COL_FRESHNESS,
+    COL_DAYS_SINCE,
 ]
 
 MAIN_AED_REQUIRED_SOURCE_COLUMNS: List[str] = [

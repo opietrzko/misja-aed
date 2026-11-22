@@ -13,8 +13,8 @@ def create_main_aed_resource_task(self) -> None:
     2. Odrzuca niepoprawne wiersze, scala i deduplikuje punkty.
     3. Tworzy zasób zbiorczy w zbiorze danych właściciela i podmienia wskaźnik.
     """
-    from mcod.aed.utils import create_main_aed_file, create_main_aed_resource
+    from mcod.aed.utils import create_main_aed_file, create_or_update_main_aed_resource
 
     path = create_main_aed_file()
-    resource = create_main_aed_resource(path)
+    resource = create_or_update_main_aed_resource(path)
     logger.info("Main AED resource created: %s", resource.pk)

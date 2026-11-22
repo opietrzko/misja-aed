@@ -36,6 +36,18 @@ DESCRIPTIONS = {
 }
 
 
+AGGREGATE_NOTES = {
+    "Nazwa dysponenta zasobu": "wyliczana: instytucja, która opublikowała wykaz (ponosi odpowiedzialność za dane)",
+    "Zakres referencyjny źródła": "wyliczana: tytuł zasobu źródłowego, czyli zakres, który dysponent deklaruje",
+    "Identyfikator zasobu źródłowego": "wyliczana: id zasobu w portalu, z którego pochodzi rekord",
+    "Data aktualizacji zasobu źródłowego": "wyliczana: data danych zasobu źródłowego",
+    "Liczba źródeł": "wyliczana: ile wykazów zgłosiło to samo urządzenie (punkty różnych dysponentów bliżej niż 25 m)",
+    "Pozostali dysponenci": "wyliczana: pozostali dysponenci tego urządzenia w formie „Dysponent (identyfikator); …”",
+    "Aktualność": "wyliczana: nieczynny / nieaktualny (weryfikacja starsza niż 2 lata) / do weryfikacji (starsza niż rok, status „do weryfikacji” lub data z przyszłości) / aktualny",
+    "Dni od ostatniej weryfikacji": "wyliczana: liczba dni od daty ostatniej weryfikacji do dnia scalenia",
+}
+
+
 def build_template(path) -> Path:
     path = Path(path)
     wb = Workbook()
@@ -67,10 +79,13 @@ def build_template(path) -> Path:
         c.font = Font(bold=True)
 
     agg = wb.create_sheet("Wykaz zbiorczy (kolumny)")
-    agg.append(["Kolumna zbiorczego wykazu"])
+    agg.append(["Kolumna zbiorczego wykazu", "Skąd się bierze"])
     for col in MAIN_AED_COLUMNS:
-        agg.append([col])
-    agg.column_dimensions["A"].width = 50
+        agg.append([col, AGGREGATE_NOTES.get(col, "z wykazu dostawcy (jak w arkuszu wzorca)")])
+    agg.column_dimensions["A"].width = 40
+    agg.column_dimensions["B"].width = 100
+    for c in agg[1]:
+        c.font = Font(bold=True)
 
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)

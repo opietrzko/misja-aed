@@ -19,21 +19,31 @@ from mcod.aed.constants import (
     AED_COLUMNS,
     COL_ACCESS,
     COL_AVAILABILITY,
+    COL_DAYS_SINCE,
+    COL_FRESHNESS,
     COL_ID,
     COL_LAT,
     COL_LON,
+    COL_OTHER_PROVIDERS,
     COL_PROVIDER,
     COL_SCOPE,
     COL_SOURCE_DATE,
     COL_SOURCE_RESOURCE,
+    COL_SOURCES_COUNT,
     COL_STATUS,
     COL_VERIFIED,
     DEDUP_DISTANCE_METERS,
     ENUM_COLUMNS,
+    FRESH_DAYS,
+    FRESHNESS_ACTUAL,
+    FRESHNESS_BROKEN,
+    FRESHNESS_STALE,
+    FRESHNESS_TO_VERIFY,
     MAIN_AED_COLUMNS,
     MAIN_AED_REQUIRED_SOURCE_COLUMNS,
     POLAND_LAT_RANGE,
     POLAND_LON_RANGE,
+    STALE_DAYS,
 )
 
 logger = logging.getLogger("mcod")
@@ -166,12 +176,15 @@ def deduplicate(df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS) -> 
     """Usuwa duplikaty - ten sam AED zgłoszony przez kilku dysponentów.
 
     Z grupy punktów leżących bliżej niż ``distance_m`` zostaje rekord najlepszy:
-    status „czynny”, potem najświeższa weryfikacja. Dopisuje kolumnę
-    „Liczba źródeł” z liczbą połączonych rekordów.
+    status „czynny”, potem najświeższa weryfikacja. Łączymy tylko punkty RÓŻNYCH dysponentów
+    (dwa urządzenia jednego dysponenta blisko siebie to dwa urządzenia, np. w dużym budynku).
+    Dopisuje „Liczba źródeł” oraz „Pozostali dysponenci” w postaci „Dysponent (identyfikator); …”.
     """
+    has_provider = COL_PROVIDER in df.columns
     if df.empty:
         df = df.copy()
-        df["Liczba źródeł"] = pd.Series(dtype=int)
+        df[COL_SOURCES_COUNT] = pd.Series(dtype=int)
+        df[COL_OTHER_PROVIDERS] = pd.Series(dtype=object)
         return df
 
     df = df.copy()
@@ -182,7 +195,7 @@ def deduplicate(df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS) -> 
     cell = 0.001  # ~110 m: siatka do szybkiego wyszukiwania sąsiadów
     grid: Dict[Tuple[int, int], List[int]] = {}
     kept: List[int] = []
-    counts: Dict[int, int] = {}
+    merged: Dict[int, List[int]] = {}
     for i, row in df.iterrows():
         lat, lon = row[COL_LAT], row[COL_LON]
         cx, cy = int(lat / cell), int(lon / cell)
@@ -190,6 +203,8 @@ def deduplicate(df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS) -> 
         for dx in (-1, 0, 1):
             for dy in (-1, 0, 1):
                 for j in grid.get((cx + dx, cy + dy), []):
+                    if has_provider and df.at[j, COL_PROVIDER] == row[COL_PROVIDER]:
+                        continue
                     if haversine_m(lat, lon, df.at[j, COL_LAT], df.at[j, COL_LON]) <= distance_m:
                         match = j
                         break
@@ -200,15 +215,46 @@ def deduplicate(df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS) -> 
         if match is None:
             grid.setdefault((cx, cy), []).append(i)
             kept.append(i)
-            counts[i] = 1
+            merged[i] = []
         else:
-            counts[match] += 1
+            merged[match].append(i)
+
+    def others(i: int) -> Optional[str]:
+        parts = []
+        for j in merged[i]:
+            name = df.at[j, COL_PROVIDER] if has_provider else "inne źródło"
+            parts.append(f"{name} ({df.at[j, COL_ID]})")
+        return "; ".join(parts) if parts else None
+
     result = df.loc[kept].copy()
-    result["Liczba źródeł"] = [counts[i] for i in kept]
+    result[COL_SOURCES_COUNT] = [1 + len(merged[i]) for i in kept]
+    result[COL_OTHER_PROVIDERS] = [others(i) for i in kept]
     return result.drop(columns=["_rank", "_ver"])
 
 
-def build_main_df(sources: List[Tuple[pd.DataFrame, Dict[str, Any]]]) -> pd.DataFrame:
+def compute_freshness(verified: Optional[datetime.date], status: str, today: Optional[datetime.date] = None) -> Tuple[str, Optional[int]]:
+    """Aktualność rekordu na podstawie statusu i daty ostatniej weryfikacji.
+
+    nieczynny        - status „nieczynny” (urządzenie nie nadaje się do użycia),
+    nieaktualny      - weryfikacja starsza niż 2 lata,
+    do weryfikacji   - status „do weryfikacji”, weryfikacja starsza niż rok albo data z przyszłości,
+    aktualny         - czynny i zweryfikowany w ciągu ostatniego roku.
+    Zwraca (aktualność, liczba dni od weryfikacji).
+    """
+    today = today or datetime.date.today()
+    if not verified:
+        return FRESHNESS_TO_VERIFY, None
+    days = (today - verified).days
+    if status == "nieczynny":
+        return FRESHNESS_BROKEN, days
+    if days > STALE_DAYS:
+        return FRESHNESS_STALE, days
+    if days < 0 or days > FRESH_DAYS or status == "do weryfikacji":
+        return FRESHNESS_TO_VERIFY, days
+    return FRESHNESS_ACTUAL, days
+
+
+def build_main_df(sources: List[Tuple[pd.DataFrame, Dict[str, Any]]], today: Optional[datetime.date] = None) -> pd.DataFrame:
     """Scala wykazy dostawców w jeden zbiorczy wykaz.
 
     ``sources`` - lista par (DataFrame wykazu, metadane: provider, scope, resource_id, data_date).
@@ -227,12 +273,15 @@ def build_main_df(sources: List[Tuple[pd.DataFrame, Dict[str, Any]]]) -> pd.Data
         frames.append(clean)
 
     if not frames:
-        main_df = pd.DataFrame(columns=MAIN_AED_COLUMNS + ["Liczba źródeł"])
+        main_df = pd.DataFrame(columns=MAIN_AED_COLUMNS)
     else:
         main_df = deduplicate(pd.concat(frames, ignore_index=True))
         main_df = main_df.sort_values([COL_PROVIDER, COL_ID]).reset_index(drop=True)
         main_df["Lp."] = range(1, len(main_df) + 1)
-    return main_df.reindex(columns=MAIN_AED_COLUMNS + ["Liczba źródeł"])
+        fresh = [compute_freshness(v, st, today) for v, st in zip(main_df[COL_VERIFIED], main_df[COL_STATUS])]
+        main_df[COL_FRESHNESS] = [f[0] for f in fresh]
+        main_df[COL_DAYS_SINCE] = pd.array([f[1] for f in fresh], dtype="Int64")
+    return main_df.reindex(columns=MAIN_AED_COLUMNS)
 
 
 def main_df_to_csv_bytes(df: pd.DataFrame) -> bytes:
@@ -284,6 +333,54 @@ def apply_aed_geo_schema(tds: Dict[str, Any]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # Część bazodanowa
 # --------------------------------------------------------------------------- #
+
+
+AED_REMOTE_NO_URL = "no_url"
+AED_REMOTE_NOT_ACCESSIBLE = "not_accessible"
+AED_REMOTE_BAD_EXTENSION = "bad_extension"
+AED_REMOTE_BAD_COLUMNS = "bad_columns"
+
+
+def check_remote_aed_file(url: Optional[str]) -> Optional[str]:
+    """Sprawdza zdalny plik wykazu AED (import XML i CKAN) tymi samymi regułami co formularz w panelu.
+
+    Zwraca kod błędu (stałe AED_REMOTE_*) albo None, gdy plik jest poprawny: adres odpowiada (200),
+    to csv/xls/xlsx, a kolumny mają nazwy i kolejność wzorca. Odpowiednik walidacji wykazu DGA.
+    """
+    import requests
+
+    from mcod.resources.dga_utils import (
+        create_df_from_dga_file,
+        get_remote_extension_if_correct_dga_content_type,
+        request_remote_dga,
+    )
+
+    if not url:
+        return AED_REMOTE_NO_URL
+    try:
+        response = request_remote_dga(url)
+    except requests.exceptions.RequestException:
+        return AED_REMOTE_NOT_ACCESSIBLE
+    if response.status_code != 200:
+        return AED_REMOTE_NOT_ACCESSIBLE
+    extension = get_remote_extension_if_correct_dga_content_type(response)
+    if extension is None:
+        return AED_REMOTE_BAD_EXTENSION
+    try:
+        df = create_df_from_dga_file(BytesIO(response.content), extension)
+    except Exception:  # noqa: BLE001
+        return AED_REMOTE_BAD_COLUMNS
+    if df is None or not validate_aed_df_columns(df):
+        return AED_REMOTE_BAD_COLUMNS
+    return None
+
+
+AED_REMOTE_MESSAGES = {
+    AED_REMOTE_NO_URL: "Wykaz AED musi wskazywać plik w polu 'url'.",
+    AED_REMOTE_NOT_ACCESSIBLE: "Adres w polu 'url' wykazu AED nie odpowiada.",
+    AED_REMOTE_BAD_EXTENSION: "Wykaz AED musi wskazywać plik w formacie xls, xlsx lub csv.",
+    AED_REMOTE_BAD_COLUMNS: "Plik wykazu AED musi zawierać dokładnie %d kolumn ułożonych i nazwanych dokładnie: %s." % (len(AED_COLUMNS), ", ".join(AED_COLUMNS)),
+}
 
 
 def get_main_aed_resource():
@@ -431,8 +528,13 @@ def _get_or_create_main_dataset():
     return dataset
 
 
-def create_main_aed_resource(file_path: Path):
-    """Tworzy zasób zbiorczy (CSV) w zbiorze danych i podmienia wskaźnik AggregatedAEDInfo."""
+def create_or_update_main_aed_resource(file_path: Path):
+    """Zasób zbiorczy: pierwszy raz tworzy, potem AKTUALIZUJE w miejscu (ten sam id i adres).
+
+    Wzorzec z panelu administracyjnego: ``update_or_create`` pliku głównego i ``revalidate()``, który
+    ponownie przetwarza dane, schemat mapy i indeks w Elasticsearch. W przeciwieństwie do wykazu DGA nie usuwamy
+    starego zasobu, więc linki, zakładki i zasilanie z zewnątrz nie psują się po każdym scaleniu.
+    """
     from django.conf import settings
     from django.core.files.uploadedfile import SimpleUploadedFile
     from django.db import transaction
@@ -440,12 +542,26 @@ def create_main_aed_resource(file_path: Path):
     from mcod.aed.models import AggregatedAEDInfo
     from mcod.resources.models import Resource, ResourceFile
 
-    old = get_main_aed_resource()
+    upload = SimpleUploadedFile(
+        name=f"{settings.MAIN_AED_FILE_NAME_PREFIX}.csv",  # stała nazwa pliku, bez daty
+        content=file_path.read_bytes(),
+        content_type="text/csv",
+    )
+    existing = get_main_aed_resource()
+    if existing is not None:
+        with transaction.atomic():
+            existing.data_date = datetime.date.today()
+            existing.tabular_data_schema = None  # schemat (typy kolumn i mapa) zostanie wyliczony na nowo z aktualnego pliku
+            existing.save()
+            ResourceFile.objects.update_or_create(resource=existing, is_main=True, defaults={"file": upload})
+        existing.revalidate()
+        return existing
+
     with transaction.atomic():
         dataset = _get_or_create_main_dataset()
         resource = Resource.objects.create(
-            title=old.title if old else settings.MAIN_AED_RESOURCE_DEFAULT_TITLE,
-            description=old.description if old else settings.MAIN_AED_RESOURCE_DEFAULT_DESC,
+            title=settings.MAIN_AED_RESOURCE_DEFAULT_TITLE,
+            description=settings.MAIN_AED_RESOURCE_DEFAULT_DESC,
             dataset=dataset,
             has_dynamic_data=True,
             has_high_value_data=False,
@@ -455,15 +571,15 @@ def create_main_aed_resource(file_path: Path):
             status="published",
             data_date=datetime.date.today(),
         )
-        upload = SimpleUploadedFile(name=file_path.name, content=file_path.read_bytes(), content_type="text/csv")
-        ResourceFile.objects.create(resource=resource, is_main=True, file=upload)
-
+        ResourceFile.objects.create(resource=resource, is_main=True, file=upload)  # post_save uruchamia walidację
         info = AggregatedAEDInfo.objects.last()
         if info:
             info.resource = resource
             info.save()
         else:
             AggregatedAEDInfo.objects.create(resource=resource)
-        if old:
-            old.delete()
     return resource
+
+
+# zgodność wsteczna nazwy
+create_main_aed_resource = create_or_update_main_aed_resource

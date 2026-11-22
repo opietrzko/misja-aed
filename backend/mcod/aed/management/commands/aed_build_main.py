@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from mcod.aed.utils import create_main_aed_file, create_main_aed_resource
+from mcod.aed.utils import create_main_aed_file, create_or_update_main_aed_resource
 
 
 class Command(BaseCommand):
@@ -14,5 +14,5 @@ class Command(BaseCommand):
         self.stdout.write(f"Wygenerowano plik: {path}")
         if options["file_only"]:
             return
-        resource = create_main_aed_resource(path)
-        self.stdout.write(self.style.SUCCESS(f"Utworzono zasób zbiorczy: {resource.pk} ({resource.title})"))
+        resource = create_or_update_main_aed_resource(path)
+        self.stdout.write(self.style.SUCCESS(f"Zasób zbiorczy gotowy: {resource.pk} ({resource.title})"))
