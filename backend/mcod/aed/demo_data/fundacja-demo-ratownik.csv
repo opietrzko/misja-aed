@@ -1,0 +1,7 @@
+Lp.,Identyfikator AED,Szerokość geograficzna,Długość geograficzna,Miejscowość,Ulica i numer,Kod TERYT gminy,Opis lokalizacji,Rodzaj obiektu,Dostępność,Godziny dostępności,Sposób dostępu,Status urządzenia,Data ostatniej weryfikacji,Kontakt instytucjonalny
+1,FDR-0001,50.06146,19.93655,Kraków,ul. Floriańska 1,1261011,wejście główne,urząd,w godzinach,pn–pt 7:30–16:00,swobodny,czynny,2026-11-15,demo@example.pl
+2,FDR-0002,50.06,19.938,Kraków,Rynek Główny 20,1261011,kiosk ratunkowy,przestrzeń publiczna,całodobowo,,swobodny,czynny,2026-11-12,demo@example.pl
+3,FDR-0003,52.22977,21.01178,Warszawa,Krakowskie Przedmieście 5,1465011,budka przy bramie,przestrzeń publiczna,całodobowo,,swobodny,czynny,2026-11-05,demo@example.pl
+4,FDR-0004,52.24,21.01,Warszawa,ul. Przykładowa 7,1465011,klatka A,budynek mieszkalny,ograniczona,,zamknięte na klucz,czynny,2026-09-01,demo@example.pl
+5,FDR-0005,10.0,21.01,Warszawa,ul. Błędna 1,1465011,szerokość poza Polską,inne,całodobowo,,swobodny,czynny,2026-11-05,demo@example.pl
+6,FDR-0006,52.231,21.005,Warszawa,ul. Zła 2,1465011,zły status,inne,całodobowo,,swobodny,zepsuty,2026-11-05,demo@example.pl
