@@ -25,6 +25,20 @@ Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dy
 4. Po zapisie wykaz trafia do wykazu zbiorczego przy najbliższym przebiegu zadania (codziennie) albo od razu po
    uruchomieniu komendy `python manage.py aed_build_main`.
 
+## Konwerter: z dowolnego pliku do wzorca
+Dysponenci mają dane w różnych układach, więc portal ma konwerter (panel administracyjny, adres `/aed/konwerter/`, albo komenda `manage.py aed_convert`).
+1. Wgraj plik (csv, xlsx, xls, json/GeoJSON, także wynik zapytania Overpass z OpenStreetMap) i opcjonalnie wybierz profil źródła (`osm`).
+2. Konwerter dopasowuje kolumny: profil, nazwa lub synonim, podobieństwo nazw, a na końcu zawartość kolumny (zakresy współrzędnych, daty, układ PL-1992).
+3. Ujednolica wartości: współrzędne (przecinek, zapis stopniowy, WKT, PL-1992 → WGS84), „całą dobę" → `całodobowo`, „sprawny" → `czynny` itd.
+4. Pokazuje mapowanie z poziomem pewności, podgląd i raport każdego wiersza (ok, poprawiono, odrzucono wraz z powodem). Wynik i raport można pobrać jako CSV.
+5. Wynik wgrywasz jako zasób z flagą „Wykaz defibrylatorów AED".
+
+Zasady: **działa na jawnych regułach, bez AI**, więc wynik jest powtarzalny i nie wymaga instalowania modeli. Czego źródło nie podaje (np. daty weryfikacji), konwerter **nie zgaduje**:
+trzeba to wpisać jawnie, inaczej wiersz jest odrzucany. Dla układu PL-1992 kolejność osi nie da się wiarygodnie odgadnąć, więc przyjmujemy „pierwsza kolumna = wschód" i zaznaczamy to w raporcie (jest opcja odwrócenia).
+Pliki przykładowe (syntetyczne): `backend/mcod/aed/demo_data/przyklad-inne-kolumny.csv` (inne nazwy kolumn, PL-1992, daty dd.mm.rrrr) i `przyklad-osm-overpass-SYNTETYCZNE.json` (format Overpass, profil `osm`).
+Prawdziwe dane z OSM pobierzesz zapytaniem Overpass `[out:json][timeout:60];area["ISO3166-1"="PL"][admin_level=2]->.pl;node["emergency"="defibrillator"](area.pl);out;`.
+OSM ma licencję ODbL (share-alike): taki wykaz publikujemy osobno, nie mieszamy go ze zbiorem na CC BY.
+
 ## Co dzieje się podczas scalania
 - odrzucane są pojedyncze błędne wiersze (współrzędne poza Polską, niedozwolone wartości słownikowe, zła data), a nie cały wykaz,
 - duplikaty (ten sam AED u kilku dysponentów, odległość ≤ 25 m) są łączone; kolumna „Liczba źródeł” pokazuje ile wykazów go zgłosiło,
