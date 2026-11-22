@@ -5,13 +5,14 @@ Prezentacja konkursowa (10 slajdów) do zadania **Misja AED - Dane na ratunek**.
 | Plik | Co to jest |
 |---|---|
 | [`Misja-AED-prezentacja-wersja-robocza.pptx`](Misja-AED-prezentacja-wersja-robocza.pptx) | **PowerPoint z animacjami**: 10 slajdów, notatki prelegenta, animowane GIF-y (scena problemu, logo, linia EKG) i **animacja budowania ostatniego slajdu**. Animacje działają w trybie pokazu slajdów (F5) |
+| [`zrzuty/`](zrzuty/) | 12 zrzutów ekranu użytych na slajdach (prototyp, panel, GitHub, wynik testów) |
 
 ## Uwagi o pliku PowerPoint
 - Każdy slajd to obraz (tło) z naniesionymi animowanymi GIF-ami, więc **tekstu na slajdach nie da się w nim edytować**.
-- Zrzuty ekranu wstaw w PowerPoincie jako zwykłe obrazy **na szare pola „ZRZUT 1-12”** (Wstaw, Obraz), przycinając je do rozmiaru pola.
+- Zrzuty ekranu z prototypu są już na slajdach (pliki w `zrzuty/`). Zrzut z wynikiem testów (156 passed) pokazuje prawdziwy wynik komendy z `TESTOWANIE.md`, odtworzony graficznie jako okno terminala.
 - GIF ze sceną problemu odtwarza się raz, a logo i linia EKG w pętli. W widoku edycji widać tylko pierwszą klatkę.
 - **Ostatni slajd buduje się sam** po wejściu na niego: kolejne słowa tytułu (efekt „pojawianie się”), potem linia EKG „wjeżdża” od lewej i pulsuje w pętli, na końcu wchodzą zdanie, hasło i znak. Są to zwykłe animacje PowerPointa (Animacje, Okienko animacji) i można je edytować. Słowa, teksty i znak są na tym slajdzie osobnymi obrazami.
 - Przed oddaniem warto przejść całość w trybie pokazu.
 
-## Co jest jeszcze do zrobienia
-- **Pola „ZRZUT 1-12”** (szare ramki na slajdach 3-8) to miejsca na zrzuty ekranu z działającego prototypu. Opis każdego pola mówi, co wstawić.
+## Do sprawdzenia przed oddaniem
+- Zrzuty z portalu pochodzą z prototypu na danych syntetycznych (stan z 22.11.2026). Jeśli dane się zmienią, zrzuty warto odświeżyć.
