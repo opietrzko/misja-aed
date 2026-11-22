@@ -7,8 +7,6 @@ Portal dane.gov.pl dostaje **wykaz AED** - nowy typ zasobu (wzorowany na wykazie
 własny wykaz w jednolitym układzie kolumn, a portal **codziennie scala je w jeden ogólnopolski wykaz**.
 Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dysponenta i zakres referencyjny źródła.
 
-Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pliki do ręcznego testu: [`przykladowe-dane/`](przykladowe-dane/).
-
 ## Szybka ścieżka (3 minuty)
 1. **Zobacz, że działa:** [aed.haloware.pl](https://aed.haloware.pl), wyszukaj „AED” i otwórz „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy”, a w nim zasób z wykazem. Tabela z danymi od kilku dysponentów (kolumny **Aktualność** i **Wiarygodność** oceniają każdy punkt), pobranie CSV i GeoJSON.
 2. **Zobacz mapę:** w tym samym zasobie otwórz zakładkę **Mapa**. Każdy punkt AED w Polsce jest na mapie z adresem, a dane na niej to te same rekordy co w tabeli i w API, bez osobnego serwisu. To odpowiedź na pytanie „gdzie jest najbliższy defibrylator”: dane z wielu rozproszonych źródeł w jednym miejscu, od razu do użycia przez ratownika albo aplikację.
@@ -50,7 +48,8 @@ Tabela, mapa, licencja, konwerter z innych układów, walidacja, harvester i kod
 13. Scalanie wykazów w zbiorczy robi zadanie Celery **codziennie o 03:45** (`mcod/celeryapp.py`), więc własny wykaz z kroku 8 pojawi się w zbiorze zbiorczym następnego dnia. Z panelu nie da się go uruchomić ręcznie (to komenda `aed_build_main` na serwerze). Przebieg scalania na danych demonstracyjnych (14 wierszy, 2 odrzucone, 1 duplikat, 11 rekordów) widać już w raporcie scalania z kroku 3.
 14. Import przez harvester: przykład pliku XML w schemacie 1.14 jest w [`04-import-xml/`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/04-import-xml). Pełnego importu przez źródło danych nie sprawdzaliśmy (patrz „Ograniczenia”).
 
-Instrukcja uruchomienia całości lokalnie i testów automatycznych: [`TESTOWANIE.md`](TESTOWANIE.md).
+## Testy i uruchomienie lokalne (opcjonalnie)
+Uruchomienie całości lokalnie, testy automatyczne i ręczne scenariusze: [`TESTOWANIE.md`](TESTOWANIE.md). Pliki do ręcznego testu: [`przykladowe-dane/`](przykladowe-dane/).
 
 ## Gdzie sprawdzić wymagania z treści zadania
 
