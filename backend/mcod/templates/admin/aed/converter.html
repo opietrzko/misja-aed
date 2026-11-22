@@ -18,6 +18,19 @@
   .aed-conv .scroll { overflow-x: auto; }
   .aed-conv .btn { display: inline-block; padding: 8px 14px; background: #0b5ed7; color: #fff; text-decoration: none; border: 0; cursor: pointer; margin-right: 8px; }
   .aed-conv .btn:focus { outline: 3px solid #ffbf47; }
+
+  /* Powłoka panelu ma sztywne body 960 px i dwie kolumny (menu + treść). Na wąskich ekranach zwalniamy szerokość,
+     a menu przenosimy pod treść, żeby treść nie dostawała ok. 170 px. Działa tylko na tej stronie. */
+  @media (max-width: 991px) {
+    body { min-width: 0 !important; width: auto !important; }
+    #footer { width: auto !important; margin-left: 0 !important; margin-right: 0 !important; box-sizing: border-box; }
+  }
+  @media (max-width: 767px) {
+    .suit-columns.two-columns { display: flex !important; flex-direction: column; padding-left: 0 !important; }
+    #suit-left { position: static !important; width: auto !important; order: 2; }
+    #suit-center { float: none !important; width: auto !important; order: 1; padding: 0 16px !important; box-sizing: border-box; }
+    .aed-conv .btn { display: block; text-align: center; margin: 0 0 8px; }
+  }
 </style>
 {% endblock %}
 
