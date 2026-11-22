@@ -1,0 +1,18 @@
+{
+  "v": 5,
+  "createdOnFiles": { "v": 1, "at": "2026-11-22T07:30:00Z" },
+  "lists": "css",
+  "format": { "v": 1, "shared": ["project/deck.css"] },
+  "title": "Misja AED - Przez dane do serca",
+  "order": ["cover", "problem", "pomysl", "dostawca", "scalanie", "uzytkownik", "zgodnosc", "ograniczenia", "akcja", "hook"],
+  "sections": {
+    "s1": { "description": "Problem i pomysł: jeden ogólnopolski wykaz AED w dane.gov.pl.", "start": "cover" },
+    "s2": { "description": "Jak to działa i dowody realizacji wymagań technicznych.", "start": "pomysl" },
+    "s3": { "description": "Ograniczenia, powiedziane uczciwie.", "start": "ograniczenia" },
+    "s4": { "description": "Akcja Przez dane do serca: logo, hasło i materiały dla dysponentów.", "start": "akcja" }
+  },
+  "faces": {
+    "montserrat": { "family": "Montserrat", "href": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" }
+  },
+  "designSystems": []
+}

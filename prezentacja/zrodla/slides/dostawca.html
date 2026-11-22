@@ -1,0 +1,23 @@
+<section id="dostawca" data-transition="fade">
+<p class="eyebrow">Dostawca danych</p>
+<h2>Od pliku do wykazu: formularz i konwerter</h2>
+<div class="split">
+<div class="l">
+<h3 style="font-size:30px;color:#D7103A;margin-top:4px">Masz plik we wzorze</h3>
+<div class="step" style="margin-top:14px"><div class="n">1</div><p>Zaloguj się jako dostawca</p></div>
+<div class="step" style="margin-top:14px"><div class="n">2</div><p>Dodaj plik csv, xls lub xlsx</p></div>
+<div class="step" style="margin-top:14px"><div class="n">3</div><p>Zaznacz „Wykaz AED: Tak”</p></div>
+<h3 style="font-size:30px;color:#D7103A;margin-top:36px">Masz plik w innym układzie</h3>
+<div class="step" style="margin-top:14px"><div class="n">4</div><p>Wgraj go do konwertera</p></div>
+<div class="step" style="margin-top:14px"><div class="n">5</div><p>Sprawdź raport i pobierz CSV</p></div>
+</div>
+<div class="r" style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div class="ph" style="height:300px"><p class="t">ZRZUT 2</p><p class="d">Formularz zasobu z polem „Wykaz AED: Tak”</p></div>
+<div class="ph" style="height:300px"><p class="t">ZRZUT 3</p><p class="d">Komunikat walidacji: oczekiwane kolumny</p></div>
+<div class="ph" style="height:300px"><p class="t">ZRZUT 4</p><p class="d">Konwerter: mapowanie kolumn z pewnością</p></div>
+<div class="ph" style="height:300px"><p class="t">ZRZUT 5</p><p class="d">Raport wierszy: ok, poprawiono, odrzucono</p></div>
+</div>
+</div>
+<p class="brand">Misja AED - Przez dane do serca</p><p class="pg"></p>
+<aside>Dowód realizacji: flaga zasobu i walidacja w formularzu portalu. Przy błędnych kolumnach formularz wskazuje oczekiwane nazwy i kolejność. Dysponenci mają dane w różnych układach, więc portal dostaje konwerter w panelu administracyjnym (adres /aed/konwerter/) i komendę aed_convert. Konwerter działa na jawnych regułach, bez AI, przelicza współrzędne z PL-1992 na WGS84 i niczego nie zgaduje: brakujące pola, np. datę weryfikacji, trzeba wpisać jawnie. Dla instytucji zasilających portal harvesterem działa to samo w schemacie XML 1.14 i w imporcie CKAN.</aside>
+</section>
