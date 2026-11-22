@@ -10,12 +10,13 @@ Dysponent nadal odpowiada za swoje dane; portal wskazuje dla każdego rekordu dy
 Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pliki do ręcznego testu: [`przykladowe-dane/`](przykladowe-dane/).
 
 ## Szybka ścieżka (3 minuty)
-1. **Zobacz, że działa:** [aed.haloware.pl](https://aed.haloware.pl), wyszukaj „AED” i otwórz „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy”. Tabela z danymi od kilku dysponentów, zakładka **Mapa**, pobranie CSV i GeoJSON.
-2. **Zaloguj się do panelu:** [admin.aed.haloware.pl](https://admin.aed.haloware.pl), login w sekcji „Konto administratora do testów” poniżej, hasło w zgłoszeniu.
-3. **Wrzuć dane:** Zasoby, Dodaj, wybierz zbiór instytucji, która nie ma jeszcze wykazu (trzy demonstracyjne już go mają), wgraj [`wcr-demo-gdansk.csv`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/01-wykazy-dostawcow/wcr-demo-gdansk.csv) i zaznacz **„Wykaz defibrylatorów AED: Tak”**. Wgranie pliku w złym układzie kolumn ([`zle-kolumny.csv`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/03-pliki-odrzucane/zle-kolumny.csv)) jest odrzucane z podpowiedzią.
-4. **Zobacz, że dane są zwracane:** nowy zasób jest na stronie portalu i w API: [`/1.4/resources?contains_aed_list=true`](https://api.aed.haloware.pl/1.4/resources?contains_aed_list=true) (po dodaniu wykaz jest o jeden więcej niż wcześniej). Do zbioru zbiorczego trafia przy codziennym scalaniu (03:45), a efekt scalania na danych demonstracyjnych widać już w jego raporcie.
+1. **Zobacz, że działa:** [aed.haloware.pl](https://aed.haloware.pl), wyszukaj „AED” i otwórz „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy”, a w nim zasób z wykazem. Tabela z danymi od kilku dysponentów (kolumny **Aktualność** i **Wiarygodność** oceniają każdy punkt), pobranie CSV i GeoJSON.
+2. **Zobacz mapę:** w tym samym zasobie otwórz zakładkę **Mapa**. Każdy punkt AED w Polsce jest na mapie z adresem, a dane na niej to te same rekordy co w tabeli i w API, bez osobnego serwisu. To odpowiedź na pytanie „gdzie jest najbliższy defibrylator”: dane z wielu rozproszonych źródeł w jednym miejscu, od razu do użycia przez ratownika albo aplikację.
+3. **Zaloguj się do panelu:** [admin.aed.haloware.pl](https://admin.aed.haloware.pl), login w sekcji „Konto administratora do testów” poniżej, hasło w zgłoszeniu.
+4. **Wrzuć dane:** Zasoby, Dodaj, wybierz zbiór instytucji, która nie ma jeszcze wykazu (trzy demonstracyjne już go mają), wgraj [`wcr-demo-gdansk.csv`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/01-wykazy-dostawcow/wcr-demo-gdansk.csv) i zaznacz **„Wykaz defibrylatorów AED: Tak”**. Wgranie pliku w złym układzie kolumn ([`zle-kolumny.csv`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/03-pliki-odrzucane/zle-kolumny.csv)) jest odrzucane z podpowiedzią.
+5. **Zobacz, że dane są zwracane:** nowy zasób jest na stronie portalu (tabela i **Mapa** z punktami z wgranego pliku) oraz w API: [`/1.4/resources?contains_aed_list=true`](https://api.aed.haloware.pl/1.4/resources?contains_aed_list=true) (po dodaniu wykaz jest o jeden więcej niż wcześniej). Do zbioru zbiorczego trafia przy codziennym scalaniu (03:45), a efekt scalania na danych demonstracyjnych widać już w jego raporcie.
 
-Po teście usuń swój zasób. Pliki do testów są w [`przykladowe-dane/`](przykladowe-dane/) w repozytorium (syntetyczne, z opisem oczekiwanych wyników).
+Pliki do testów są w [`przykladowe-dane/`](przykladowe-dane/) w repozytorium (syntetyczne, z opisem oczekiwanych wyników).
 
 ## Pełna ścieżka (opcjonalnie, dla chcących sprawdzić więcej)
 Tabela, mapa, licencja, konwerter z innych układów, walidacja, harvester i kod. Szczegóły:
