@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import pandas as pd
 import pytest
@@ -20,6 +21,7 @@ from mcod.aed.utils import (
     apply_aed_geo_schema,
     AEDMissingRequiredColumnError,
     build_main_df,
+    build_report_df,
     check_row,
     compute_freshness,
     deduplicate,
@@ -195,3 +197,36 @@ def test_build_main_df_adds_freshness_columns():
     by_id = main.set_index(COL_ID)
     assert by_id.loc["A-1", COL_FRESHNESS] == "aktualny" and by_id.loc["A-1", COL_DAYS_SINCE] == 21
     assert by_id.loc["B", COL_FRESHNESS] == "nieaktualny"
+
+
+def test_report_lists_rejected_rows_and_merged_duplicates():
+    a = make_df(make_row(**{"Identyfikator AED": "A-1"}), make_row(**{"Identyfikator AED": "A-2", "Status urządzenia": "zepsuty"}))
+    b = make_df(make_row(**{"Identyfikator AED": "B-1", "Szerokość geograficzna": 50.06003}))
+    report = []
+    main = build_main_df(
+        [
+            (a, {"provider": "Urząd", "scope": "S", "resource_id": 1, "data_date": None}),
+            (b, {"provider": "Fundacja", "scope": "S", "resource_id": 2, "data_date": None}),
+        ],
+        today=TODAY,
+        report=report,
+    )
+    assert len(main) == 1
+    by_result = {r["Wynik"]: r for r in report}
+    rej = by_result["odrzucono wiersz"]
+    assert (rej["Dysponent"], rej["Zasób źródłowy"], rej["Wiersz w pliku"], rej["Identyfikator AED"]) == ("Urząd", 1, 3, "A-2")
+    merged = by_result["połączono z innym dysponentem"]
+    assert merged["Dysponent"] == "Fundacja" and merged["Wiersz w pliku"] == 2 and "A-1" in merged["Powód"]
+
+
+def test_empty_report_has_single_ok_row_so_portal_accepts_the_file():
+    df = build_report_df([])
+    assert len(df) == 1 and df.iloc[0]["Wynik"] == "brak uwag"
+
+
+def test_geojson_is_json_serializable_with_numpy_values():
+    df = make_df(make_row())
+    main = build_main_df([(df, {"provider": "P", "scope": "S", "resource_id": 1, "data_date": None})], today=TODAY)
+    text = json.dumps(main_df_to_geojson(main), ensure_ascii=False)
+    props = json.loads(text)["features"][0]["properties"]
+    assert props["Dni od ostatniej weryfikacji"] == 21 and props["Aktualność"] == "aktualny"

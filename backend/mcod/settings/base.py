@@ -1768,6 +1768,12 @@ MAIN_AED_DATASET_DEFAULT_DESC = (
     "i ocenić, czy jest dostępne i aktualne."
 )
 MAIN_AED_FILE_NAME_PREFIX = "Wykaz AED zbiorczy"
+MAIN_AED_REPORT_RESOURCE_TITLE = "Raport z ostatniego scalenia wykazów AED"
+MAIN_AED_GEOJSON_RESOURCE_TITLE = "Ogólnopolski wykaz defibrylatorów AED (GeoJSON)"
+MAIN_AED_GEOJSON_RESOURCE_DESC = (
+    "Ten sam wykaz zbiorczy w formacie GeoJSON (punkty, współrzędne WGS84 w kolejności długość, szerokość), "
+    "wygodny dla aplikacji mapowych i ratunkowych. Zawartość jest identyczna z zasobem CSV."
+)
 MAIN_AED_DATASET_UPDATE_NOTIFICATION_EMAIL = "aed@mcod.local"
 MAIN_AED_DATASET_CATEGORIES_TITLES = ["Zdrowie", "Rząd i sektor publiczny"]
 MAIN_AED_DATASET_TAGS_NAMES = ["AED", "defibrylator", "ratownictwo", "pierwsza pomoc", "Misja AED"]

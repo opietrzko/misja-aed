@@ -9,9 +9,12 @@ import datetime
 import logging
 import math
 import os
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import json
 
 import pandas as pd
 
@@ -41,6 +44,11 @@ from mcod.aed.constants import (
     FRESHNESS_TO_VERIFY,
     MAIN_AED_COLUMNS,
     MAIN_AED_REQUIRED_SOURCE_COLUMNS,
+    REPORT_COLUMNS,
+    REPORT_MERGED,
+    REPORT_OK,
+    REPORT_REJECTED,
+    REPORT_SKIPPED,
     POLAND_LAT_RANGE,
     POLAND_LON_RANGE,
     STALE_DAYS,
@@ -157,6 +165,7 @@ def sanitize_source_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[Dict[str, A
         for col in ENUM_COLUMNS:
             clean[col] = clean[col].map(lambda v: str(v).strip().lower())
         clean[COL_VERIFIED] = clean[COL_VERIFIED].map(_to_date)
+    clean["_row"] = [int(i) + 2 for i in clean.index]  # numer wiersza w pliku źródłowym (nagłówek = 1), do raportu
     return clean, rejected
 
 
@@ -172,7 +181,9 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 _STATUS_RANK = {"czynny": 0, "do weryfikacji": 1, "nieczynny": 2}
 
 
-def deduplicate(df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS) -> pd.DataFrame:
+def deduplicate(
+    df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS, merge_log: Optional[List[Dict[str, Any]]] = None
+) -> pd.DataFrame:
     """Usuwa duplikaty - ten sam AED zgłoszony przez kilku dysponentów.
 
     Z grupy punktów leżących bliżej niż ``distance_m`` zostaje rekord najlepszy:
@@ -226,6 +237,19 @@ def deduplicate(df: pd.DataFrame, distance_m: float = DEDUP_DISTANCE_METERS) -> 
             parts.append(f"{name} ({df.at[j, COL_ID]})")
         return "; ".join(parts) if parts else None
 
+    if merge_log is not None:
+        for i in kept:
+            for j in merged[i]:
+                merge_log.append(
+                    {
+                        "provider": df.at[j, COL_PROVIDER] if has_provider else "inne źródło",
+                        "resource": df.at[j, COL_SOURCE_RESOURCE] if COL_SOURCE_RESOURCE in df.columns else None,
+                        "row": df.at[j, "_row"] if "_row" in df.columns else None,
+                        "id": df.at[j, COL_ID],
+                        "winner_provider": df.at[i, COL_PROVIDER] if has_provider else "inne źródło",
+                        "winner_id": df.at[i, COL_ID],
+                    }
+                )
     result = df.loc[kept].copy()
     result[COL_SOURCES_COUNT] = [1 + len(merged[i]) for i in kept]
     result[COL_OTHER_PROVIDERS] = [others(i) for i in kept]
@@ -254,7 +278,25 @@ def compute_freshness(verified: Optional[datetime.date], status: str, today: Opt
     return FRESHNESS_ACTUAL, days
 
 
-def build_main_df(sources: List[Tuple[pd.DataFrame, Dict[str, Any]]], today: Optional[datetime.date] = None) -> pd.DataFrame:
+def _report_row(provider, resource_id, row, aed_id, result, reason) -> Dict[str, Any]:
+    return dict(zip(REPORT_COLUMNS, [provider, resource_id, row, aed_id, result, reason]))
+
+
+def build_report_df(report: List[Dict[str, Any]]) -> pd.DataFrame:
+    """Raport scalania jako tabela. Gdy uwag nie ma, jedna wiersz „brak uwag” (pusty plik nie przechodzi walidacji portalu)."""
+    if not report:
+        report = [_report_row("", None, None, "", REPORT_OK, "wszystkie wykazy przetworzone bez zastrzeżeń")]
+    df = pd.DataFrame(report, columns=REPORT_COLUMNS)
+    df["Wiersz w pliku"] = pd.array(df["Wiersz w pliku"].tolist(), dtype="Int64")
+    df["Zasób źródłowy"] = pd.array(df["Zasób źródłowy"].tolist(), dtype="Int64")
+    return df
+
+
+def build_main_df(
+    sources: List[Tuple[pd.DataFrame, Dict[str, Any]]],
+    today: Optional[datetime.date] = None,
+    report: Optional[List[Dict[str, Any]]] = None,
+) -> pd.DataFrame:
     """Scala wykazy dostawców w jeden zbiorczy wykaz.
 
     ``sources`` - lista par (DataFrame wykazu, metadane: provider, scope, resource_id, data_date).
@@ -264,6 +306,8 @@ def build_main_df(sources: List[Tuple[pd.DataFrame, Dict[str, Any]]], today: Opt
         clean, rejected = sanitize_source_df(df)
         for item in rejected:
             logger.warning("AED source %s: row %s rejected: %s", meta.get("resource_id"), item["row"], item["reason"])
+            if report is not None:
+                report.append(_report_row(meta["provider"], meta.get("resource_id"), item["row"], item["id"], REPORT_REJECTED, item["reason"]))
         if clean.empty:
             continue
         clean[COL_PROVIDER] = meta["provider"]
@@ -275,7 +319,12 @@ def build_main_df(sources: List[Tuple[pd.DataFrame, Dict[str, Any]]], today: Opt
     if not frames:
         main_df = pd.DataFrame(columns=MAIN_AED_COLUMNS)
     else:
-        main_df = deduplicate(pd.concat(frames, ignore_index=True))
+        merge_log: List[Dict[str, Any]] = []
+        main_df = deduplicate(pd.concat(frames, ignore_index=True), merge_log=merge_log)
+        if report is not None:
+            for m in merge_log:
+                reason = f"ten sam punkt (≤ {DEDUP_DISTANCE_METERS} m) co {m['winner_id']} ({m['winner_provider']}); w wykazie zbiorczym zostaje tamten rekord"
+                report.append(_report_row(m["provider"], m["resource"], m["row"], m["id"], REPORT_MERGED, reason))
         main_df = main_df.sort_values([COL_PROVIDER, COL_ID]).reset_index(drop=True)
         main_df["Lp."] = range(1, len(main_df) + 1)
         fresh = [compute_freshness(v, st, today) for v, st in zip(main_df[COL_VERIFIED], main_df[COL_STATUS])]
@@ -290,10 +339,20 @@ def main_df_to_csv_bytes(df: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
+def _json_value(v: Any) -> Any:
+    if v is None or (not isinstance(v, (list, dict)) and pd.isna(v)):
+        return None
+    if hasattr(v, "isoformat"):
+        return v.isoformat()
+    if hasattr(v, "item"):  # skalary numpy (np.int64 itp.) nie są serializowalne do JSON
+        return v.item()
+    return v
+
+
 def main_df_to_geojson(df: pd.DataFrame) -> Dict[str, Any]:
     features = []
     for _, row in df.iterrows():
-        props = {k: (None if pd.isna(v) else (v.isoformat() if hasattr(v, "isoformat") else v)) for k, v in row.items() if k not in (COL_LAT, COL_LON)}
+        props = {k: _json_value(v) for k, v in row.items() if k not in (COL_LAT, COL_LON)}
         features.append(
             {
                 "type": "Feature",
@@ -411,17 +470,18 @@ def get_aed_resource_for_institution(organization_id, exclude_resource_id=None):
 
 
 def get_source_resources():
-    from django.conf import settings
-
+    """Wszystkie opublikowane wykazy AED dostawców (bez zbiorczego), także jeszcze niezwalidowane."""
     from mcod.resources.models import Resource
 
     main = get_main_aed_resource()
     qs = Resource.objects.filter(contains_aed_list=True, status="published")
-    if getattr(settings, "AED_REQUIRE_VALIDATED_SOURCES", True):
-        qs = qs.filter(data_tasks_last_status="SUCCESS", file_tasks_last_status="SUCCESS", link_tasks_last_status="SUCCESS")
     if main:
         qs = qs.exclude(id=main.pk)
     return qs.select_related("dataset__organization").order_by("dataset__organization__title")
+
+
+def _validation_ok(resource) -> bool:
+    return all(st == "SUCCESS" for st in (resource.data_tasks_last_status, resource.file_tasks_last_status, resource.link_tasks_last_status))
 
 
 def read_source_df(resource) -> pd.DataFrame:
@@ -440,16 +500,30 @@ def read_source_df(resource) -> pd.DataFrame:
     return df
 
 
-def collect_sources() -> List[Tuple[pd.DataFrame, Dict[str, Any]]]:
+def collect_sources(report: Optional[List[Dict[str, Any]]] = None) -> List[Tuple[pd.DataFrame, Dict[str, Any]]]:
+    from django.conf import settings
+
+    def skip(resource, reason):
+        logger.error("Skipping AED source %s: %s", resource.pk, reason)
+        if report is not None:
+            report.append(_report_row(resource.dataset.organization.title, resource.pk, None, "", REPORT_SKIPPED, reason))
+
     sources = []
     for resource in get_source_resources():
+        if getattr(settings, "AED_REQUIRE_VALIDATED_SOURCES", True) and not _validation_ok(resource):
+            skip(
+                resource,
+                "walidacja zasobu w portalu trwa albo się nie powiodła (dane: %s, plik: %s, link: %s); popraw plik lub poczekaj"
+                % (resource.data_tasks_last_status, resource.file_tasks_last_status, resource.link_tasks_last_status),
+            )
+            continue
         try:
             df = read_source_df(resource)
         except AEDResourceReadError as exc:
-            logger.error("Skipping AED source: %s", exc)
+            skip(resource, f"nie udało się odczytać pliku ({exc})")
             continue
         if not validate_aed_df_columns(df):
-            logger.error("Skipping AED source %s: invalid columns", resource.pk)
+            skip(resource, "nazwy lub kolejność kolumn różnią się od wzorca: " + ", ".join(AED_COLUMNS))
             continue
         sources.append(
             (
@@ -465,15 +539,29 @@ def collect_sources() -> List[Tuple[pd.DataFrame, Dict[str, Any]]]:
     return sources
 
 
-def create_main_aed_file(directory: Optional[Path] = None) -> Path:
+@dataclass
+class AEDBuild:
+    main_df: pd.DataFrame
+    report: List[Dict[str, Any]]
+    csv_path: Path
+
+
+def build_main_aed(directory: Optional[Path] = None) -> AEDBuild:
+    """Scala wykazy dostawców: zwraca tabelę zbiorczą, raport uwag i ścieżkę pliku CSV."""
     from django.conf import settings
 
     directory = Path(directory or settings.MAIN_AED_RESOURCE_CREATION_ROOT)
     directory.mkdir(parents=True, exist_ok=True)
-    main_df = build_main_df(collect_sources())
+    report: List[Dict[str, Any]] = []
+    sources = collect_sources(report)
+    main_df = build_main_df(sources, report=report)
     path = directory / f"{settings.MAIN_AED_FILE_NAME_PREFIX} {datetime.datetime.now():%Y%m%d}.csv"
     path.write_bytes(main_df_to_csv_bytes(main_df))
-    return path
+    return AEDBuild(main_df=main_df, report=report, csv_path=path)
+
+
+def create_main_aed_file(directory: Optional[Path] = None) -> Path:
+    return build_main_aed(directory).csv_path
 
 
 def ensure_main_dataset_license(dataset):
@@ -583,3 +671,87 @@ def create_or_update_main_aed_resource(file_path: Path):
 
 # zgodność wsteczna nazwy
 create_main_aed_resource = create_or_update_main_aed_resource
+
+
+def merge_summary(build: AEDBuild) -> str:
+    """Jedno zdanie o ostatnim scaleniu (trafia do opisu zasobu z raportem)."""
+    counts: Dict[str, int] = {}
+    for r in build.report:
+        counts[r["Wynik"]] = counts.get(r["Wynik"], 0) + 1
+    providers = build.main_df["Nazwa dysponenta zasobu"].nunique() if not build.main_df.empty else 0
+    return (
+        f"Ostatnie scalenie: {datetime.date.today():%Y-%m-%d}. Rekordów w wykazie zbiorczym: {len(build.main_df)} "
+        f"(dysponentów z danymi: {providers}). Odrzuconych wierszy: {counts.get(REPORT_REJECTED, 0)}, "
+        f"połączonych duplikatów: {counts.get(REPORT_MERGED, 0)}, pominiętych zasobów: {counts.get(REPORT_SKIPPED, 0)}. "
+        "Każdy wiersz raportu opisuje jedną uwagę do wykazu dostawcy: poprawcie plik i scalenie uwzględni zmiany następnego dnia."
+    )
+
+
+def upsert_auxiliary_resource(dataset, title: str, description: str, filename: str, content: bytes, content_type: str):
+    """Zasób pomocniczy zbioru zbiorczego (raport, GeoJSON): tworzony raz, potem aktualizowany w miejscu.
+
+    Nie jest wykazem dostawcy (contains_aed_list=False), więc nie bierze udziału w scalaniu.
+    """
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from django.db import transaction
+
+    from mcod.resources.models import Resource, ResourceFile
+
+    upload = SimpleUploadedFile(name=filename, content=content, content_type=content_type)
+    existing = Resource.objects.filter(dataset=dataset, title=title, contains_aed_list=False).first()
+    if existing is not None:
+        with transaction.atomic():
+            existing.description = description
+            existing.data_date = datetime.date.today()
+            existing.tabular_data_schema = None
+            existing.save()
+            ResourceFile.objects.update_or_create(resource=existing, is_main=True, defaults={"file": upload})
+        existing.revalidate()
+        return existing
+    with transaction.atomic():
+        resource = Resource.objects.create(
+            title=title,
+            description=description,
+            dataset=dataset,
+            has_dynamic_data=True,
+            has_high_value_data=False,
+            has_high_value_data_from_ec_list=False,
+            has_research_data=False,
+            contains_aed_list=False,
+            status="published",
+            data_date=datetime.date.today(),
+        )
+        ResourceFile.objects.create(resource=resource, is_main=True, file=upload)
+    return resource
+
+
+def publish_auxiliary_resources(dataset, build: AEDBuild) -> Dict[str, Any]:
+    """Raport scalania (CSV) i GeoJSON obok zasobu zbiorczego."""
+    from django.conf import settings
+
+    report_csv = main_df_to_csv_bytes(build_report_df(build.report))
+    report = upsert_auxiliary_resource(
+        dataset,
+        settings.MAIN_AED_REPORT_RESOURCE_TITLE,
+        merge_summary(build),
+        "Raport_scalania_AED.csv",
+        report_csv,
+        "text/csv",
+    )
+    geojson = upsert_auxiliary_resource(
+        dataset,
+        settings.MAIN_AED_GEOJSON_RESOURCE_TITLE,
+        settings.MAIN_AED_GEOJSON_RESOURCE_DESC,
+        "Wykaz_AED_zbiorczy.geojson",
+        json.dumps(main_df_to_geojson(build.main_df), ensure_ascii=False).encode("utf-8"),
+        "application/geo+json",
+    )
+    return {"report": report, "geojson": geojson}
+
+
+def run_main_aed_build():
+    """Pełny przebieg: scalenie, zasób zbiorczy (w miejscu), raport i GeoJSON. Wspólny dla zadania Celery i komendy."""
+    build = build_main_aed()
+    main = create_or_update_main_aed_resource(build.csv_path)
+    aux = publish_auxiliary_resources(main.dataset, build)
+    return main, aux, build

@@ -94,6 +94,20 @@ MAIN_AED_COLUMNS: List[str] = [
     COL_DAYS_SINCE,
 ]
 
+# Raport scalania: jeden wiersz = jedna uwaga do wykazu dostawcy (odrzucony wiersz, połączony duplikat, pominięty zasób).
+REPORT_COLUMNS: List[str] = [
+    "Dysponent",
+    "Zasób źródłowy",
+    "Wiersz w pliku",
+    "Identyfikator AED",
+    "Wynik",
+    "Powód",
+]
+REPORT_REJECTED = "odrzucono wiersz"
+REPORT_MERGED = "połączono z innym dysponentem"
+REPORT_SKIPPED = "pominięto zasób"
+REPORT_OK = "brak uwag"
+
 MAIN_AED_REQUIRED_SOURCE_COLUMNS: List[str] = [
     COL_ID,
     COL_LAT,

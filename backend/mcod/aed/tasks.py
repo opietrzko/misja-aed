@@ -13,8 +13,7 @@ def create_main_aed_resource_task(self) -> None:
     2. Odrzuca niepoprawne wiersze, scala i deduplikuje punkty.
     3. Tworzy zasób zbiorczy w zbiorze danych właściciela i podmienia wskaźnik.
     """
-    from mcod.aed.utils import create_main_aed_file, create_or_update_main_aed_resource
+    from mcod.aed.utils import run_main_aed_build
 
-    path = create_main_aed_file()
-    resource = create_or_update_main_aed_resource(path)
-    logger.info("Main AED resource created: %s", resource.pk)
+    resource, aux, build = run_main_aed_build()
+    logger.info("Main AED resource updated: %s (report %s, geojson %s)", resource.pk, aux["report"].pk, aux["geojson"].pk)
