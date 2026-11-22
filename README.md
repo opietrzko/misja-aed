@@ -15,6 +15,14 @@ Nazwa akcji: **„Przez dane do serca”**, hasło: **„Zdążysz, jeśli wiesz
 
 **Prototyp online: [aed.haloware.pl](https://aed.haloware.pl)**. Instrukcja dla jury: [`JURY.md`](JURY.md). Na wersji online jest przygotowane **konto administracyjne do testów dla jury**: login i hasło w [`JURY.md`](JURY.md#konto-administratora-do-testów-prototyp-online).
 
+## Jak to wygląda
+
+Zbiorczy wykaz AED jest zasobem w portalu dane.gov.pl: ta sama tabela co w innych wykazach, z mapą punktów i pobraniem CSV i GeoJSON (dane syntetyczne).
+
+![Mapa punktów AED w zasobie zbiorczym](docs/zrzuty/mapa-aed.png)
+
+![Tabela zasobu zbiorczego z dysponentem i zakresem referencyjnym źródła](docs/zrzuty/tabela-zbiorcza.png)
+
 ---
 
 <details>
