@@ -12,7 +12,7 @@ Jak przetestować całość krok po kroku: [`TESTOWANIE.md`](TESTOWANIE.md). Pli
 ## Szybka ścieżka (3 minuty)
 1. **Zobacz, że działa:** [aed.haloware.pl](https://aed.haloware.pl), wyszukaj „AED” i otwórz „Ogólnopolski wykaz defibrylatorów AED - zbiór zbiorczy”, a w nim zasób z wykazem. Tabela z danymi od kilku dysponentów (kolumny **Aktualność** i **Wiarygodność** oceniają każdy punkt), pobranie CSV i GeoJSON.
 2. **Zobacz mapę:** w tym samym zasobie otwórz zakładkę **Mapa**. Każdy punkt AED w Polsce jest na mapie z adresem, a dane na niej to te same rekordy co w tabeli i w API, bez osobnego serwisu. To odpowiedź na pytanie „gdzie jest najbliższy defibrylator”: dane z wielu rozproszonych źródeł w jednym miejscu, od razu do użycia przez ratownika albo aplikację.
-3. **Zaloguj się do panelu:** [admin.aed.haloware.pl](https://admin.aed.haloware.pl), login w sekcji „Konto administratora do testów” poniżej, hasło w zgłoszeniu.
+3. **Zaloguj się do panelu:** [admin.aed.haloware.pl](https://admin.aed.haloware.pl), login i hasło są w formularzu zgłoszeniowym (sekcja „Konto administratora do testów” poniżej).
 4. **Wrzuć dane:** Zasoby, Dodaj, wybierz zbiór instytucji, która nie ma jeszcze wykazu (trzy demonstracyjne już go mają), wgraj [`wcr-demo-gdansk.csv`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/01-wykazy-dostawcow/wcr-demo-gdansk.csv) i zaznacz **„Wykaz defibrylatorów AED: Tak”**. Wgranie pliku w złym układzie kolumn ([`zle-kolumny.csv`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/03-pliki-odrzucane/zle-kolumny.csv)) jest odrzucane z podpowiedzią.
 5. **Zobacz, że dane są zwracane:** nowy zasób jest na stronie portalu (tabela i **Mapa** z punktami z wgranego pliku) oraz w API: [`/1.4/resources?contains_aed_list=true`](https://api.aed.haloware.pl/1.4/resources?contains_aed_list=true) (po dodaniu wykaz jest o jeden więcej niż wcześniej). Do zbioru zbiorczego trafia przy codziennym scalaniu (03:45), a efekt scalania na danych demonstracyjnych widać już w jego raporcie.
 
@@ -73,14 +73,13 @@ Na wersji online przygotowaliśmy konto administracyjne tylko dla jury. Pozwala 
 |---|---|
 | Panel administracyjny | https://admin.aed.haloware.pl |
 | Konwerter AED | https://admin.aed.haloware.pl/aed/konwerter/ |
-| Login (e-mail) | `jury@aed.haloware.pl` |
-| Hasło | (podane w zgłoszeniu konkursowym) |
+| Login i hasło | w formularzu zgłoszeniowym |
 | Rola | administrator (superużytkownik) |
 
 Środowisko demonstracyjne z danymi syntetycznymi, bez prawdziwych danych. Konto zostanie usunięte po zakończeniu oceny.
 
 ## Kroki dla dostawcy danych (panel administracyjny)
-1. Zaloguj się do panelu administracyjnego. Na wersji online: konto z sekcji „Konto administratora do testów” powyżej. W środowisku lokalnym: `pelnomocnik@mcod.local` (hasło `User123!`) jako dostawca albo `admin@mcod.local` (`testadmin123!`) jako administrator. Konta deweloperskie, tylko dane testowe.
+1. Zaloguj się do panelu administracyjnego. Na wersji online: konto z formularza zgłoszeniowego (sekcja „Konto administratora do testów” powyżej). W środowisku lokalnym: `pelnomocnik@mcod.local` (hasło `User123!`) jako dostawca albo `admin@mcod.local` (`testadmin123!`) jako administrator. Konta deweloperskie, tylko dane testowe.
 2. Utwórz zbiór danych instytucji i dodaj zasób z plikiem csv/xls/xlsx w układzie z pliku wzorcowego.
 3. Zaznacz „Wykaz defibrylatorów AED: Tak” i zapisz. Przy błędnych kolumnach formularz wskaże oczekiwane nazwy i kolejność.
 4. Po zapisie wykaz trafia do wykazu zbiorczego przy najbliższym przebiegu zadania (codziennie) albo od razu po
