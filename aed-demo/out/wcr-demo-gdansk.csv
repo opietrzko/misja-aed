@@ -1,0 +1,4 @@
+Lp.,Identyfikator AED,Szerokość geograficzna,Długość geograficzna,Miejscowość,Ulica i numer,Kod TERYT gminy,Opis lokalizacji,Rodzaj obiektu,Dostępność,Godziny dostępności,Sposób dostępu,Status urządzenia,Data ostatniej weryfikacji,Kontakt instytucjonalny
+1,WCR-GD-01,54.35205,18.64637,Gdańsk,Długi Targ 1,2261011,przy fontannie Neptuna,przestrzeń publiczna,całodobowo,,swobodny,czynny,2026-11-18,demo@example.pl
+2,WCR-GD-02,54.356,18.643,Gdańsk,Dworzec Główny,2261011,hala główna,dworzec,całodobowo,,swobodny,czynny,2026-11-08,demo@example.pl
+3,WCR-GD-03,54.372,18.613,Gdańsk,ul. Grunwaldzka 100,2261011,"centrum handlowe, informacja",galeria handlowa,w godzinach,codziennie 9:00–21:00,swobodny,czynny,2026-11-02,demo@example.pl
