@@ -23,6 +23,7 @@ import {
   TileLayer,
   TileLayerOptions,
 } from 'leaflet';
+import * as Leaflet from 'leaflet';
 
 /**
  * Leaflet Service
@@ -41,7 +42,8 @@ export class LeafletService {
     @Inject(PLATFORM_ID) private platformId: object,
   ) {
     if (isPlatformBrowser(platformId)) {
-      this.L = require('leaflet');
+      // Import ES zamiast require(): serwer deweloperski (Vite/esbuild) nie obsługuje dynamicznego require.
+      this.L = Leaflet;
     }
   }
 
