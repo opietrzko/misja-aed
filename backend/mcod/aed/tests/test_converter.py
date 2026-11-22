@@ -230,3 +230,21 @@ def test_city_is_filled_from_address_when_source_has_no_city_column():
     out, report, _ = convert_dataframe(df)
     assert len(out) == 1, report
     assert out.iloc[0]["Miejscowość"] == "Łódź"
+
+
+def test_generated_ids_follow_file_position_even_for_rejected_rows():
+    df = pd.DataFrame(
+        {
+            "Adres": ["ul. A 1, 00-001 Miastowo", "ul. B 2, 00-002 Miastowo", "ul. C 3, 00-003 Miastowo"],
+            "Godziny": ["całodobowo"] * 3,
+        }
+    )
+    _, report, _ = convert_dataframe(
+        df, defaults={COL_VERIFIED: "2026-11-20", COL_ACCESS: "za zgodą", COL_STATUS: "do weryfikacji"}
+    )
+    assert [r["id"] for r in report] == ["AED-0001", "AED-0002", "AED-0003"]  # różne identyfikatory w raporcie
+
+
+def test_ewidence_number_header_is_recognised_as_identifier():
+    m = map_columns(pd.DataFrame(columns=["Nr ewid.", "Miasto", "Ulica"]))
+    assert m.columns[COL_ID].sources == ["Nr ewid."]

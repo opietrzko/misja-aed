@@ -55,7 +55,22 @@ TARGET_COLUMNS: List[str] = [c for c in AED_COLUMNS if c != "Lp."]
 
 # Synonimy nazw kolumn (w postaci znormalizowanej). Telefon celowo pominięty: to często dane osobowe.
 SYNONYMS: Dict[str, List[str]] = {
-    COL_ID: ["id", "identyfikator", "identyfikator aed", "id aed", "aed id", "nr", "numer", "numer aed", "nr aed", "kod aed"],
+    COL_ID: [
+        "id",
+        "identyfikator",
+        "identyfikator aed",
+        "id aed",
+        "aed id",
+        "id urzadzenia",
+        "nr",
+        "numer",
+        "numer aed",
+        "nr aed",
+        "nr ewid",
+        "nr ewidencyjny",
+        "numer ewidencyjny",
+        "kod aed",
+    ],
     COL_LAT: ["lat", "latitude", "szerokosc", "szerokosc geograficzna", "szer", "szer geogr", "geo lat", "wsp b"],
     COL_LON: ["lon", "lng", "long", "longitude", "dlugosc", "dlugosc geograficzna", "dl", "dl geogr", "geo lon", "wsp l"],
     COL_CITY: ["miejscowosc", "gmina", "miasto", "city", "town", "locality", "addr city"],
@@ -548,11 +563,11 @@ def convert_dataframe(
     report: List[Dict[str, Any]] = []
     rows: List[Dict[str, Any]] = []
 
-    for idx, raw in df.iterrows():
+    for position, (idx, raw) in enumerate(df.iterrows(), start=1):
         get = lambda col: _first_value(raw, mapping.columns.get(col))  # noqa: E731
         lat, lon, notes = _resolve_coordinates(raw, get, mapping)
         values = _row_values(get, lat, lon)
-        _apply_defaults(values, defaults, notes, id_prefix, len(rows) + 1)
+        _apply_defaults(values, defaults, notes, id_prefix, position)  # numer wg pozycji w pliku, także dla odrzuconych
         error = _row_error(values)
         entry = {"wiersz": int(idx) + 2, "id": values[COL_ID]}
         if error:
