@@ -47,7 +47,7 @@ Tabela, mapa, licencja, konwerter z innych układów, walidacja, harvester i kod
 
 **F. Zasilanie automatyczne**
 13. Scalanie wykazów w zbiorczy robi zadanie Celery **codziennie o 03:45** (`mcod/celeryapp.py`), więc własny wykaz z kroku 8 pojawi się w zbiorze zbiorczym następnego dnia. Z panelu nie da się go uruchomić ręcznie (to komenda `aed_build_main` na serwerze). Przebieg scalania na danych demonstracyjnych (14 wierszy, 2 odrzucone, 1 duplikat, 11 rekordów) widać już w raporcie scalania z kroku 3.
-14. Import przez harvester: przykład pliku XML w schemacie 1.14 jest w [`05-import-xml/`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/05-import-xml). Pełnego importu przez źródło danych nie sprawdzaliśmy (patrz „Ograniczenia”).
+14. Import przez harvester: przykład pliku XML w schemacie 1.14 jest w [`04-import-xml/`](https://github.com/opietrzko/misja-aed/blob/main/przykladowe-dane/04-import-xml). Pełnego importu przez źródło danych nie sprawdzaliśmy (patrz „Ograniczenia”).
 
 Instrukcja uruchomienia całości lokalnie i testów automatycznych: [`TESTOWANIE.md`](TESTOWANIE.md).
 
