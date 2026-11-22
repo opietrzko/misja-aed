@@ -4,12 +4,19 @@ Prezentacja konkursowa (10 slajdów) do zadania **Misja AED - Dane na ratunek**.
 
 | Plik | Co to jest |
 |---|---|
+| [`Misja-AED-prezentacja-wersja-robocza.pptx`](Misja-AED-prezentacja-wersja-robocza.pptx) | **PowerPoint z animacjami**: 10 slajdów, notatki prelegenta, trzy animowane GIF-y (scena problemu, logo, linia EKG). Animacje działają w trybie pokazu slajdów (F5) |
 | [`Misja-AED-prezentacja-wersja-robocza.pdf`](Misja-AED-prezentacja-wersja-robocza.pdf) | Wersja do przeczytania: 10 stron w stanie końcowym, **bez animacji** |
 | [`zrodla/`](zrodla/) | Źródła talii (HTML i CSS), wyeksportowane z edytora slajdów |
 
+## Uwagi o pliku PowerPoint
+- Każdy slajd to obraz (tło) z naniesionymi animowanymi GIF-ami, więc **tekstu na slajdach nie da się w nim edytować**. Do edycji służy talia w edytorze slajdów, a źródła są w `zrodla/`.
+- Zrzuty ekranu wstaw w PowerPoincie jako zwykłe obrazy **na szare pola „ZRZUT 1-12”** (Wstaw, Obraz), przycinając je do rozmiaru pola.
+- GIF ze sceną problemu odtwarza się raz, a logo i linia EKG w pętli. W widoku edycji widać tylko pierwszą klatkę.
+- Plik nie był otwierany w PowerPoincie (powstał poza nim), więc przed oddaniem warto go raz otworzyć i przejść w trybie pokazu.
+
 ## Co jest jeszcze do zrobienia
 - **Pola „ZRZUT 1-12”** (szare ramki na slajdach 3-8) to miejsca na zrzuty ekranu z działającego prototypu. Opis każdego pola mówi, co wstawić.
-- **Animacje** (scena problemu, animowane logo, linia EKG na ostatnim slajdzie) działają w edytorze i w trybie prezentacji. W PDF jest widoczny stan końcowy.
+- **Animacje** (scena problemu, animowane logo, linia EKG na ostatnim slajdzie) są w pliku PowerPoint. W PDF nie da się ich zapisać, więc jest tam stan końcowy.
 
 ## Uwagi o źródłach
 - Ikony na slajdach pochodzą z edytora (`<x-icon>`). W PDF zastąpiono je prostymi odpowiednikami.
