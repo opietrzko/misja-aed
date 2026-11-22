@@ -86,6 +86,11 @@ Ograniczenie: w imporcie CKAN nie sprawdzamy jeszcze, czy instytucja ma już wyk
 
 ## Ograniczenia
 Lista do slajdu „ograniczenia" (stan na dziś, uczciwie):
+- **Zakres zmian w portalu (założenie).** Nie mogliśmy potwierdzić z organizatorem, jak szeroko wolno rozszerzać kod portalu. Oparliśmy się na wskazówce mentora z czatu
+  hackathonu, że trzeba „dostosować i przebudować logikę i metody w portalu”, aby wykazy można było pobierać i scalać w jedną standardową listę, oraz na jego zastrzeżeniu, że
+  nie wolno zmieniać zasad publikacji (za dane odpowiada dostawca, a nie portal). Zmiany w istniejącym kodzie są addytywne: 18 plików, +274 / −2 linie, **zero nowych zależności**,
+  ten sam stos (Django, Celery, Elasticsearch, pandas i pyproj, które portal już ma). Nowy kod jest w module `mcod/aed`. Najbardziej „zewnętrzne” elementy to schemat XSD harvestera 1.14
+  (opcjonalny element, starsze wersje działają bez zmian), poprawka frontu Leaflet (obejście błędu serwera deweloperskiego) i `host-gateway` w docker-compose (tylko środowisko lokalne).
 - **Brak geokodowania adresów w środowisku lokalnym.** Konwerter wymaga współrzędnych i nie zgaduje ich z adresu. Portal dane.gov.pl ma własny geokoder i potrafi wyliczyć punkty
   z adresów (miejscowość, kod pocztowy, ulica, numer), ale jego usługi (`GEOCODER_URL`) nie ma w repozytorium ani w naszym środowisku. Przykład z praktyki: prawdziwy wykaz z Łodzi
   (140 adresów, bez współrzędnych) jest przez konwerter odrzucany z komunikatem „brak współrzędnych (jest adres)". Rozwiązania spoza naszego środowiska: współrzędne od dysponenta
