@@ -1,0 +1,6 @@
+Lp.,Identyfikator AED,Szerokość geograficzna,Długość geograficzna,Miejscowość,Ulica i numer,Kod TERYT gminy,Opis lokalizacji,Rodzaj obiektu,Dostępność,Godziny dostępności,Sposób dostępu,Status urządzenia,Data ostatniej weryfikacji,Kontakt instytucjonalny
+1,DEMO-UM-001,50.06143,19.93658,Kraków,ul. Floriańska 1,1261011,"hol główny, przy recepcji",urząd,w godzinach,pn-pt 7:30-16:00,swobodny,czynny,2026-11-03,demo@example.pl
+2,DEMO-UM-002,50.0578,19.9372,Kraków,pl. Wszystkich Świętych 3,1261011,"parter, portiernia",urząd,całodobowo,,swobodny,czynny,2026-10-20,demo@example.pl
+3,DEMO-UM-003,50.06465,19.94498,Kraków,"Dworzec Główny, hala",1261011,przy kasach,dworzec,całodobowo,,swobodny,czynny,2026-11-10,demo@example.pl
+4,DEMO-UM-004,50.0496,19.9448,Kraków,ul. Dietla 50,1261011,wejście od podwórza,szkoła,w godzinach,pn-pt 7:00-18:00,za zgodą,do weryfikacji,2025-12-01,demo@example.pl
+5,DEMO-UM-005,50.067,19.912,Kraków,ul. Błędna 9,1261011,hol,urząd,całodobowo,,swobodny,czynny,2026-11-01,demo@example.pl

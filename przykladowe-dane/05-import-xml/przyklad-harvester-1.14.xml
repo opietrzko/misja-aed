@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns2:datasets xmlns:ns2="urn:otwarte-dane:harvester:1.14" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<dataset status="published">
+		<extIdent>demo-aed-zbior-1</extIdent>
+		<title>
+			<polish>Wykaz defibrylatorów AED dysponenta demonstracyjnego</polish>
+			<english>AED defibrillator list of a demonstration provider</english>
+		</title>
+		<description>
+			<polish>Wykaz urządzeń AED w jednolitym układzie kolumn (Misja AED). Dane syntetyczne.</polish>
+			<english>List of AED devices in the standard column layout (AED Mission). Synthetic data.</english>
+		</description>
+		<updateFrequency>daily</updateFrequency>
+		<hasDynamicData>true</hasDynamicData>
+		<hasHighValueData>false</hasHighValueData>
+		<hasHighValueDataFromEuropeanCommissionList>false</hasHighValueDataFromEuropeanCommissionList>
+		<hasResearchData>false</hasResearchData>
+		<categories>
+			<category>HEAL</category>
+		</categories>
+		<resources>
+			<resource status="published">
+				<extIdent>demo-aed-zasob-1</extIdent>
+				<!-- Adres musi wskazywać plik csv, xls lub xlsx w układzie wzorca i serwer musi zwracać odpowiedni Content-Type (np. text/csv). -->
+				<url>https://example.com/wykaz-aed.csv</url>
+				<title>
+					<polish>Wykaz AED - zakres referencyjny: obiekty demonstracyjne</polish>
+					<english>AED list - reference scope: demonstration sites</english>
+				</title>
+				<description>
+					<polish>Zasób oznaczony jako wykaz AED (containsAedList)</polish>
+					<english>Resource marked as an AED list (containsAedList)</english>
+				</description>
+				<availability>remote</availability>
+				<dataDate>2026-11-20</dataDate>
+				<hasDynamicData>false</hasDynamicData>
+				<hasHighValueData>false</hasHighValueData>
+				<hasHighValueDataFromEuropeanCommissionList>false</hasHighValueDataFromEuropeanCommissionList>
+				<hasResearchData>false</hasResearchData>
+				<containsProtectedData>false</containsProtectedData>
+				<containsAedList>true</containsAedList>
+			</resource>
+		</resources>
+		<tags>
+			<tag lang="pl">AED</tag>
+			<tag lang="pl">defibrylator</tag>
+			<tag lang="en">AED</tag>
+		</tags>
+	</dataset>
+</ns2:datasets>

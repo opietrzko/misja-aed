@@ -1,0 +1,4 @@
+Lp.,Identyfikator AED,Szerokość geograficzna,Długość geograficzna,Miejscowość,Ulica i numer,Kod TERYT gminy,Opis lokalizacji,Rodzaj obiektu,Dostępność,Godziny dostępności,Sposób dostępu,Status urządzenia,Data ostatniej weryfikacji,Kontakt instytucjonalny
+1,OUT-001,50.06143,19.93658,Kraków,ul. Floriańska 1,1261011,hol,urząd,całodobowo,,swobodny,czynny,2026-11-03,demo@example.pl
+2,OUT-002,10.0,19.93658,Nigdzie,ul. Zła 1,,szerokość poza Polską,inne,całodobowo,,swobodny,czynny,2026-11-03,demo@example.pl
+3,OUT-003,50.06143,40.0,Nigdzie,ul. Zła 2,,długość poza Polską,inne,całodobowo,,swobodny,czynny,2026-11-03,demo@example.pl

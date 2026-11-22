@@ -1,0 +1,2 @@
+To nie jest wykaz AED w formacie csv, xls ani xlsx.
+Formularz zasobu odrzuci ten plik jako wykaz AED.

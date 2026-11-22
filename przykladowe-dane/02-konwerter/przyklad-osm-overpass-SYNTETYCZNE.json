@@ -1,0 +1,78 @@
+{
+ "version": 0.6,
+ "generator": "SYNTETYCZNE DANE DEMO (nie pochodzą z OpenStreetMap)",
+ "osm3s": {
+  "copyright": "dane demonstracyjne, format jak Overpass API"
+ },
+ "elements": [
+  {
+   "type": "node",
+   "id": 9000001,
+   "lat": 50.0647,
+   "lon": 19.945,
+   "tags": {
+    "emergency": "defibrillator",
+    "defibrillator:location": "przy wejściu do hali dworca",
+    "opening_hours": "24/7",
+    "access": "yes",
+    "addr:city": "Kraków",
+    "addr:street": "ul. Lubicz",
+    "addr:housenumber": "2",
+    "indoor": "yes",
+    "check_date": "2026-10-12"
+   }
+  },
+  {
+   "type": "node",
+   "id": 9000002,
+   "lat": 52.228,
+   "lon": 21.003,
+   "tags": {
+    "emergency": "defibrillator",
+    "description": "galeria handlowa, przy informacji",
+    "opening_hours": "Mo-Sa 09:00-21:00",
+    "access": "customers",
+    "addr:city": "Warszawa",
+    "addr:street": "ul. Przykładowa",
+    "addr:housenumber": "10"
+   }
+  },
+  {
+   "type": "node",
+   "id": 9000003,
+   "lat": 54.351,
+   "lon": 18.646,
+   "tags": {
+    "emergency": "defibrillator",
+    "access": "private",
+    "addr:city": "Gdańsk"
+   }
+  },
+  {
+   "type": "node",
+   "id": 9000004,
+   "lat": 10.0,
+   "lon": 18.0,
+   "tags": {
+    "emergency": "defibrillator",
+    "opening_hours": "24/7",
+    "access": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 9000005,
+   "center": {
+    "lat": 51.108,
+    "lon": 17.033
+   },
+   "tags": {
+    "emergency": "defibrillator",
+    "name": "Hala sportowa, wejście B",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "access": "permissive",
+    "addr:city": "Wrocław"
+   }
+  }
+ ]
+}
