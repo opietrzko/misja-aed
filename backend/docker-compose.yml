@@ -148,7 +148,7 @@ services:
           - forum.mcod.local
           - mail.mcod.local
     extra_hosts:
-      - host.docker.internal:172.17.0.1
+      - host.docker.internal:host-gateway
 
   mcod-discourse:
     container_name: mcod-discourse
