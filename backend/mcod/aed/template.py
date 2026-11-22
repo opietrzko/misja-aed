@@ -90,6 +90,45 @@ AGGREGATE_NOTES = {
 }
 
 
+# Dodatkowe wiersze przykładowe (kolejność jak w AED_COLUMNS); pierwszy wiersz bierzemy z DESCRIPTIONS.
+EXTRA_EXAMPLES = [
+    [
+        "2",
+        "GDA-0001",
+        "54.35205",
+        "18.64637",
+        "Gdańsk",
+        "Długi Targ 1",
+        "2261011",
+        "przy fontannie Neptuna, szafka ratunkowa",
+        "przestrzeń publiczna",
+        "całodobowo",
+        None,
+        "swobodny",
+        "czynny",
+        "2026-11-10",
+        "ratownictwo@miasto.example.pl",
+    ],
+    [
+        "3",
+        "POZ-0007",
+        "52.40800",
+        "16.93400",
+        "Poznań",
+        "ul. Szkolna 5",
+        "3064011",
+        "portiernia, wejście od ul. Szkolnej",
+        "szkoła",
+        "ograniczona",
+        "w dni nauki 7:00-17:00",
+        "za zgodą",
+        "do weryfikacji",
+        "2026-06-15",
+        "sekretariat@szkola.example.pl",
+    ],
+]
+
+
 def _build_workbook() -> Workbook:
     wb = Workbook()
     ws = wb.active
@@ -102,6 +141,9 @@ def _build_workbook() -> Workbook:
         c.alignment = Alignment(wrap_text=True, vertical="center")
         ws.cell(row=2, column=i, value=DESCRIPTIONS[col][2])
         ws.column_dimensions[c.column_letter].width = 24
+    for r, example in enumerate(EXTRA_EXAMPLES, start=3):
+        for i, value in enumerate(example, start=1):
+            ws.cell(row=r, column=i, value=value)
     for col, values in ((COL_AVAILABILITY, AVAILABILITY_VALUES), (COL_ACCESS, ACCESS_VALUES), (COL_STATUS, STATUS_VALUES)):
         idx = AED_COLUMNS.index(col) + 1
         letter = ws.cell(row=1, column=idx).column_letter
