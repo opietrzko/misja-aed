@@ -34,6 +34,12 @@ def _resolve_tabular_data_schema(resource: "Resource") -> Dict[str, Any]:
         if tds.get("fields") == old_fields:
             tds = resource.from_resource.tabular_data_schema
 
+    if resource.contains_aed_list:
+        # wykaz AED ma stały układ kolumn - mapa w portalu włącza się automatycznie
+        from mcod.aed.utils import apply_aed_geo_schema
+
+        tds = apply_aed_geo_schema(tds)
+
     return tds
 
 
