@@ -148,6 +148,7 @@ INSTALLED_APPS = [
     "mcod.suggestions",
     "mcod.newsletter",
     "mcod.harvester",
+    "mcod.aed",
     "mcod.cms",
     "mcod.laboratory",
     "mcod.academy",
@@ -970,6 +971,7 @@ CELERY_TASK_ROUTES = {
     "mcod.submissions.tasks.generate_statistical_report_for_all_submissions_task": {"queue": "reports"},
     "mcod.resources.tasks.check_link_protocol": {"queue": "resources"},
     "mcod.resources.tasks.create_main_dga_resource_task": {"queue": "resources"},
+    "mcod.aed.tasks.create_main_aed_resource_task": {"queue": "resources"},
     "mcod.resources.tasks.delete_es_resource_tabular_data_index": {"queue": "indexing_data"},
     "mcod.resources.tasks.delete_es_resource_tabular_data_indexes_for_organization": {"queue": "indexing_data"},
     "mcod.resources.tasks.entrypoint_process_resource_file_validation_task": {"queue": "resources"},
@@ -1746,6 +1748,28 @@ MAIN_DGA_DATASET_TAGS_NAMES = [
     "akt o zarządzaniu danymi",
     "chronione dane",
 ]
+
+# Misja AED - zbiorczy wykaz defibrylatorów (wzorowany na Main DGA)
+MAIN_AED_RESOURCE_CREATION_ROOT = str(ROOT_DIR.path(MEDIA_ROOT, "main_aed"))
+MAIN_AED_DATASET_OWNER_ORGANIZATION_PK = env("MAIN_AED_DATASET_OWNER_ORGANIZATION_PK", default=2844)
+MAIN_AED_DATASET_OWNER_ORGANIZATION_TITLE = env("MAIN_AED_DATASET_OWNER_ORGANIZATION_TITLE", default="Ministerstwo Cyfryzacji")
+AED_REQUIRE_VALIDATED_SOURCES = env.bool("AED_REQUIRE_VALIDATED_SOURCES", default=True)
+MAIN_AED_RESOURCE_DEFAULT_TITLE = "Ogólnopolski wykaz defibrylatorów AED"
+MAIN_AED_RESOURCE_DEFAULT_DESC = (
+    "Zbiorczy wykaz defibrylatorów AED scalony z wykazów publikowanych przez dysponentów. "
+    "Każdy rekord wskazuje dysponenta, zakres referencyjny źródła i datę ostatniej weryfikacji urządzenia. "
+    "Za jakość danych źródłowych odpowiada dysponent danego wykazu. Dane aktualizowane codziennie."
+)
+MAIN_AED_DATASET_DEFAULT_TITLE = "Ogólnopolski wykaz defibrylatorów AED – zbiór zbiorczy"
+MAIN_AED_DATASET_DEFAULT_DESC = (
+    "Zbiór agreguje wykazy defibrylatorów AED udostępniane w portalu przez wielu dysponentów "
+    "w jednolitym układzie (wzorcowy zakres danych Misji AED). Pozwala odnaleźć najbliższe urządzenie "
+    "i ocenić, czy jest dostępne i aktualne."
+)
+MAIN_AED_FILE_NAME_PREFIX = "Wykaz AED zbiorczy"
+MAIN_AED_DATASET_UPDATE_NOTIFICATION_EMAIL = "aed@mcod.local"
+MAIN_AED_DATASET_CATEGORIES_TITLES = ["Zdrowie", "Rząd i sektor publiczny"]
+MAIN_AED_DATASET_TAGS_NAMES = ["AED", "defibrylator", "ratownictwo", "pierwsza pomoc", "Misja AED"]
 
 PASSWORD_RESET_PATH = "/user/reset-password/%s/"
 EMAIL_VALIDATION_PATH = "/user/verify-email/%s/"
