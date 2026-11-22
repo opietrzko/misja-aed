@@ -13,6 +13,3 @@ Prezentacja konkursowa (10 slajdów) do zadania **Misja AED - Dane na ratunek**.
 - GIF ze sceną problemu odtwarza się raz, a logo i linia EKG w pętli. W widoku edycji widać tylko pierwszą klatkę.
 - **Ostatni slajd buduje się sam** po wejściu na niego: kolejne słowa tytułu (efekt „pojawianie się”), potem linia EKG „wjeżdża” od lewej i pulsuje w pętli, na końcu wchodzą zdanie, hasło i znak. Są to zwykłe animacje PowerPointa (Animacje, Okienko animacji) i można je edytować. Słowa, teksty i znak są na tym slajdzie osobnymi obrazami.
 - Przed oddaniem warto przejść całość w trybie pokazu.
-
-## Do sprawdzenia przed oddaniem
-- Zrzuty z portalu pochodzą z prototypu na danych syntetycznych (stan z 22.11.2026). Jeśli dane się zmienią, zrzuty warto odświeżyć.
