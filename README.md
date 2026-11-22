@@ -183,6 +183,7 @@ PYTHONPATH=. .venv/bin/python -m pytest mcod/aed/tests -c /dev/null --confcutdir
 Zgodnie z regulaminem zadania (§2 ust. 7-8) wskazujemy zakres użycia AI:
 - **Kod, testy i dokumentacja techniczna:** pisane z pomocą Claude (Claude Code, Anthropic) pod kierunkiem zespołu.
 - **Identyfikacja wizualna** (logo, ikony, materiały, księga znaku): wykonana w programie **Affinity**, w którym pomagał Claude (przez MCP), na podstawie poleceń zespołu.
+- **Prezentacja:** treść slajdów, układ, animacje i plik PowerPoint przygotowano z pomocą Claude na podstawie poleceń zespołu. Zespół zdecydował o treści, kolejności slajdów i wyborze materiałów.
 - **Wkład zespołu:** koncepcja akcji i jej nazwa, kierunek graficzny, analiza zadania i wskazówek mentora, decyzje projektowe (m.in. rozszerzenie portalu
   zamiast osobnego serwisu, licencja CC BY 4.0, rezygnacja z geokodowania zewnętrzną usługą ze względu na licencję) oraz weryfikacja wyników.
 - **AI w działaniu prototypu:** brak. Konwerter, walidacja, deduplikacja i ocena wiarygodności to jawne, deterministyczne reguły.

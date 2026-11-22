@@ -189,5 +189,5 @@ i deduplikację: 14 wierszy wejściowych → 2 odrzucone → 1 duplikat → 11 r
 
 ## Wykorzystanie AI
 Pełny opis w [`README.md`](README.md#wykorzystanie-sztucznej-inteligencji). W skrócie: kod, testy i dokumentację przygotowano z pomocą Claude (Claude Code) pod kierunkiem zespołu,
-a identyfikację wizualną wykonano w programie Affinity z pomocą Claude (przez MCP) na podstawie poleceń zespołu. Koncepcja, nazwa, decyzje projektowe i weryfikacja wyników: zespół.
+a identyfikację wizualną wykonano w programie Affinity z pomocą Claude (przez MCP) na podstawie poleceń zespołu. Prezentację (treść, układ, animacje, plik PowerPoint) przygotowano z pomocą Claude na podstawie poleceń zespołu. Koncepcja, nazwa, decyzje projektowe i weryfikacja wyników: zespół.
 W działaniu prototypu AI nie występuje (jawne reguły).
